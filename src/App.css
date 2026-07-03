@@ -1,0 +1,114 @@
+@import "tailwindcss";
+
+@theme {
+  --color-control-bg: #06090f;
+  --color-control-panel: #0b0f19;
+  --color-control-panel-light: #121826;
+  --color-control-border: #1b263b;
+  --color-control-border-active: #38bdf8;
+  --color-control-cyan: #00f0ff;
+  --color-control-green: #10b981;
+  --color-control-amber: #f59e0b;
+  --color-control-red: #ef4444;
+  --color-control-text: #94a3b8;
+  --color-control-text-bright: #e2e8f0;
+
+  --animate-scanline: scanline 8s linear infinite;
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-glow: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes scanline {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes glow {
+  0% {
+    box-shadow: 0 0 5px rgba(0, 240, 255, 0.2), inset 0 0 5px rgba(0, 240, 255, 0.1);
+  }
+  100% {
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.6), inset 0 0 10px rgba(0, 240, 255, 0.3);
+  }
+}
+
+/* Custom Base / Utility Styles */
+html, body, #root {
+  background-color: var(--color-control-bg);
+  color: var(--color-control-text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* CRT monitor curve scanline overlay */
+.crt-overlay::after {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  aspect-ratio: 16/9;
+  background-size: 100% 4px, 6px 100%;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+/* Digital Grid Background */
+.digital-grid {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(27, 38, 59, 0.15) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(27, 38, 59, 0.15) 1px, transparent 1px);
+}
+
+/* High tech border brackets */
+.brackets {
+  position: relative;
+}
+.brackets::before, .brackets::after {
+  content: "";
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-color: var(--color-control-cyan);
+  border-style: solid;
+  pointer-events: none;
+}
+.brackets::before {
+  top: -1px;
+  left: -1px;
+  border-width: 1px 0 0 1px;
+}
+.brackets::after {
+  bottom: -1px;
+  right: -1px;
+  border-width: 0 1px 1px 0;
+}
+
+/* Scrollbar styles for console grids */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #06090f;
+}
+::-webkit-scrollbar-thumb {
+  background: #1b263b;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #38bdf8;
+}
