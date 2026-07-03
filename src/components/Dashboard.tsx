@@ -7,6 +7,7 @@ import { AccessControl } from "./AccessControl";
 import { useAccessControlStore } from "../store/accessControlStore";
 import { Alarms } from "./Alarms";
 import { useAlarmStore } from "../store/alarmStore";
+import { Events } from "./Events";
 
 export const Dashboard: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -16,7 +17,7 @@ export const Dashboard: React.FC = () => {
   const [time, setTime] = useState(new Date());
   const [sysLogs, setSysLogs] = useState<string[]>([]);
   const [latency, setLatency] = useState(12);
-  const [activeTab, setActiveTab] = useState<"status" | "live" | "access" | "alarms">("status");
+  const [activeTab, setActiveTab] = useState<"status" | "live" | "access" | "alarms" | "events">("status");
 
   // Connect real-time alarms SSE stream
   useEffect(() => {
@@ -224,6 +225,20 @@ export const Dashboard: React.FC = () => {
               </span>
             )}
           </button>
+          <button
+            onClick={() => {
+              setActiveTab("events");
+              setSysLogs((prev) => [...prev, `[${new Date().toLocaleTimeString()}] Navigated to: Events Correlation Feed`].slice(-4));
+            }}
+            className={`px-4 py-2 border-t border-x transition-all uppercase tracking-wider font-bold cursor-pointer flex items-center gap-2 ${
+              activeTab === "events"
+                ? "border-control-cyan text-control-cyan bg-control-panel/20"
+                : "border-transparent text-control-text/60 hover:text-control-text hover:bg-control-panel-light/35"
+            }`}
+          >
+            <Radio className="h-3.5 w-3.5 text-control-cyan" />
+            <span>Events Correlation</span>
+          </button>
         </div>
 
         {/* Central Workspace (Tab rendering) */}
@@ -254,6 +269,7 @@ export const Dashboard: React.FC = () => {
         {activeTab === "live" && <LiveView />}
         {activeTab === "access" && <AccessControl />}
         {activeTab === "alarms" && <Alarms />}
+        {activeTab === "events" && <Events />}
 
         {/* Bottom system logs terminal bar */}
         <div className="bg-control-panel border border-control-border p-3 flex flex-col md:flex-row items-stretch md:items-center gap-3">
