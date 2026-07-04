@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuthStore } from "./store/authStore";
 import { Login } from "./components/Login";
 import { Dashboard } from "./components/Dashboard";
@@ -6,8 +6,11 @@ import { DetachedCameraPlayer } from "./components/DetachedCameraPlayer";
 
 const App: React.FC = () => {
   const { isAuthenticated, initialize } = useAuthStore();
+  const [theme, setTheme] = useState<"dark" | "light">(() => {
+    if (typeof window === "undefined") return "dark";
+    return window.localStorage.getItem("wardis-theme") === "light" ? "light" : "dark";
+  });
 
-  // Parse query parameters for detached multi-window mode
   const queryParams = new URLSearchParams(window.location.search);
   const isDetached = queryParams.get("detached") === "true";
   const cameraId = queryParams.get("cameraId");
@@ -16,8 +19,15 @@ const App: React.FC = () => {
   const statut = queryParams.get("statut");
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("wardis-theme", theme);
+      document.documentElement.classList.remove("theme-dark", "theme-light");
+      document.documentElement.classList.add(theme === "dark" ? "theme-dark" : "theme-light");
+    }
+  }, [theme]);
+
+  useEffect(() => {
     if (isDetached && token) {
-      // Direct injection of token for detached session context
       useAuthStore.setState({
         token: token,
         isAuthenticated: true,
@@ -38,9 +48,13 @@ const App: React.FC = () => {
   }
 
   return (
-    <>
-      {isAuthenticated ? <Dashboard /> : <Login />}
-    </>
+    <div className={theme === "dark" ? "theme-dark" : "theme-light"}>
+      {isAuthenticated ? (
+        <Dashboard theme={theme} onToggleTheme={() => setTheme(theme === "dark" ? "light" : "dark")} />
+      ) : (
+        <Login theme={theme} onToggleTheme={() => setTheme(theme === "dark" ? "light" : "dark")} />
+      )}
+    </div>
   );
 };
 
