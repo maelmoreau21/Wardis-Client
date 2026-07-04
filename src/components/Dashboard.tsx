@@ -10,7 +10,8 @@ import { useWorkspaceStore, type TabType } from "../store/workspaceStore";
 import { 
   Terminal, Cpu, LayoutGrid, ShieldAlert, Map, 
   Camera, DoorOpen, Users, Settings, Video,
-  Film, BarChart3, SlidersHorizontal, FileText
+  Film, BarChart3, SlidersHorizontal, FileText,
+  History
 } from "lucide-react";
 
 // Workspace Tab Views
@@ -23,6 +24,7 @@ import { UserSettings } from "./UserSettings";
 import { UserManagement } from "./UserManagement";
 import { CameraConfig } from "./CameraConfig";
 import { HomePortal } from "./HomePortal";
+import { Investigation } from "./Investigation";
 
 // Layout components
 import { TopBar } from "./layout/TopBar";
@@ -105,6 +107,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
   const sidebarLinks = useMemo(() => {
     return [
       { key: "live", type: "live" as TabType, labelKey: "taskLive" as TranslationKey, icon: Camera, closable: true },
+      { key: "investigation", type: "investigation" as TabType, labelKey: "taskInvestigation" as TranslationKey, icon: History, closable: true },
       { key: "alarms", type: "alarms" as TabType, labelKey: "taskAlarms" as TranslationKey, icon: ShieldAlert, closable: true },
       { key: "access", type: "access" as TabType, labelKey: "taskAccess" as TranslationKey, icon: DoorOpen, closable: true },
       { key: "map", type: "map" as TabType, labelKey: "taskMap" as TranslationKey, icon: Map, closable: true },
@@ -150,6 +153,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
       case "diagnostics": return Cpu;
       case "reports": return BarChart3;
       case "admin-system": return SlidersHorizontal;
+      case "investigation": return History;
     }
   };
 
@@ -276,6 +280,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
           {activeTab?.type === "camera-config" && <CameraConfig />}
           {activeTab?.type === "users" && <UserManagement />}
           {activeTab?.type === "settings" && <UserSettings theme={theme} onToggleTheme={onToggleTheme} />}
+          {activeTab?.type === "investigation" && <Investigation />}
           
           {activeTab?.type === "reports" && (
             <div className="flex flex-col gap-6 overflow-y-auto h-full p-1">

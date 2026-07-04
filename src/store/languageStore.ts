@@ -97,6 +97,7 @@ export const translations = {
     taskCameraConfig: "Configuration Caméras",
     taskReports: "Rapports",
     taskAdmin: "Administration & Système",
+    taskInvestigation: "Investigation / Lecture",
 
     // User Settings / Operator Profile
     userSettingsTitle: "Paramètres de l'opérateur",
@@ -233,6 +234,7 @@ export const translations = {
     taskCameraConfig: "Camera Configuration",
     taskReports: "Reports",
     taskAdmin: "Administration & System",
+    taskInvestigation: "Investigation / Playback",
 
     // User Settings / Operator Profile
     userSettingsTitle: "Operator Settings",
