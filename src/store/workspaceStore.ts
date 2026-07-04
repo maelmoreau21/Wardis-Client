@@ -26,6 +26,7 @@ interface WorkspaceState {
   openTab: (type: TabType, title: string, params?: Record<string, any>, closable?: boolean) => void;
   closeTab: (id: string) => void;
   setActiveTabId: (id: string) => void;
+  reorderTabs: (startIndex: number, endIndex: number) => void;
   clearTabs: () => void;
 }
 
@@ -92,6 +93,14 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
 
   setActiveTabId: (id) => {
     set({ activeTabId: id });
+  },
+
+  reorderTabs: (startIndex, endIndex) => {
+    const { tabs } = get();
+    const result = Array.from(tabs);
+    const [removed] = result.splice(startIndex, 1);
+    result.splice(endIndex, 0, removed);
+    set({ tabs: result });
   },
 
   clearTabs: () => {

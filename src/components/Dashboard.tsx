@@ -9,7 +9,8 @@ import { useWorkspaceStore, type TabType } from "../store/workspaceStore";
 // Lucide icons
 import { 
   LogOut, Radio, Terminal, Cpu, Clock, LayoutGrid, ShieldAlert, Map, 
-  Camera, DoorOpen, Sparkles, Moon, Sun, Globe, Users, Plus, X, Settings, Video
+  Camera, DoorOpen, Sparkles, Moon, Sun, Globe, Users, Plus, X, Settings, Video,
+  ChevronLeft, ChevronRight, Menu
 } from "lucide-react";
 
 // Workspace Tab Views
@@ -36,13 +37,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
   const { connectEventStream, disconnectEventStream, activeAlarms } = useAlarmStore();
   
   // Workspace tabs store
-  const { tabs, activeTabId, openTab, closeTab, setActiveTabId } = useWorkspaceStore();
+  const { tabs, activeTabId, openTab, closeTab, setActiveTabId, reorderTabs } = useWorkspaceStore();
   
   // Local states
   const [time, setTime] = useState(new Date());
   const [sysLogs, setSysLogs] = useState<{ time: string; key: TranslationKey; variables?: any }[]>([]);
   const [latency, setLatency] = useState(12);
   const [showTabMenu, setShowTabMenu] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  
+  // Drag and Drop Tab Reordering State
+  const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
 
   useEffect(() => {
     connectEventStream();
@@ -133,32 +138,60 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
 
   const handleSidebarClick = (link: typeof sidebarLinks[0]) => {
     openTab(link.type, link.labelKey, undefined, link.closable);
-    setSysLogs((prev) => [
-      ...prev,
-      { time: new Date().toLocaleTimeString(), key: "tabLogged" as TranslationKey, variables: { label: t(link.labelKey) } }
-    ].slice(-4));
+  };
+
+  // Drag and drop tab reordering handlers
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIdx(index);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIdx !== null && draggedIdx !== index) {
+      reorderTabs(draggedIdx, index);
+      setDraggedIdx(index);
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIdx(null);
   };
 
   return (
     <div className="flex h-screen w-screen bg-control-bg overflow-hidden text-control-text select-none">
       
-      {/* Sidebar navigation */}
-      <aside className="w-64 bg-control-panel border-r border-control-border flex flex-col justify-between shrink-0">
-        <div className="flex flex-col gap-6 p-5">
-          {/* Logo and Brand */}
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-control-cyan text-white shadow-md shadow-control-cyan/20">
-              <Sparkles className="h-4 w-4" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-base font-bold text-control-text-bright tracking-tight">Wardis</span>
-                <span className="rounded-full border border-control-cyan/20 bg-control-cyan/10 px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-[0.15em] text-control-cyan">
-                  v0.0.1
-                </span>
+      {/* Sidebar navigation (with collapsible transition) */}
+      <aside className={`bg-control-panel border-r border-control-border flex flex-col justify-between shrink-0 transition-all duration-300 ${
+        sidebarCollapsed ? "w-16" : "w-64"
+      }`}>
+        <div className="flex flex-col gap-6 p-4">
+          {/* Logo, Brand, and Collapse Toggle */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3 overflow-hidden">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-control-cyan text-white shadow-md shadow-control-cyan/20">
+                <Sparkles className="h-4 w-4" />
               </div>
-              <p className="text-[10px] text-control-text/75 uppercase tracking-wider font-semibold">{t("dashboardTitle")}</p>
+              {!sidebarCollapsed && (
+                <div className="truncate">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base font-bold text-control-text-bright tracking-tight">Wardis</span>
+                    <span className="rounded-full border border-control-cyan/20 bg-control-cyan/10 px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-[0.15em] text-control-cyan">
+                      v0.0.1
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-control-text/75 uppercase tracking-wider font-semibold">{t("dashboardTitle")}</p>
+                </div>
+              )}
             </div>
+            
+            {/* Sidebar toggle button */}
+            <button
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="p-1 rounded hover:bg-control-panel-light text-control-text/80 hover:text-control-text-bright transition cursor-pointer"
+            >
+              {sidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            </button>
           </div>
 
           {/* Navigation Links */}
@@ -170,14 +203,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
                 <button
                   key={link.key}
                   onClick={() => handleSidebarClick(link)}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+                  className={`flex items-center rounded-lg px-3 py-2.5 text-xs font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
                     isActive
                       ? "bg-control-cyan text-white shadow-sm shadow-control-cyan/20"
                       : "text-control-text hover:bg-control-panel-light hover:text-control-text-bright"
-                  }`}
+                  } ${sidebarCollapsed ? "justify-center gap-0" : "gap-3"}`}
+                  title={sidebarCollapsed ? t(link.labelKey) : undefined}
                 >
-                  <Icon className="h-4.5 w-4.5" />
-                  {t(link.labelKey)}
+                  <Icon className="h-4.5 w-4.5 shrink-0" />
+                  {!sidebarCollapsed && <span className="truncate">{t(link.labelKey)}</span>}
                 </button>
               );
             })}
@@ -185,21 +219,25 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
         </div>
 
         {/* Bottom Sidebar Panel */}
-        <div className="p-5 border-t border-control-border flex flex-col gap-4">
+        <div className="p-4 border-t border-control-border flex flex-col gap-4">
           {/* User Profile */}
           <div 
             onClick={() => openTab("settings", "taskSettings", undefined, true)}
-            className="flex items-center gap-3 bg-control-panel-light/40 border border-control-border/60 hover:bg-control-panel-light/70 rounded-xl p-3 cursor-pointer transition"
+            className={`flex items-center bg-control-panel-light/40 border border-control-border/60 hover:bg-control-panel-light/70 rounded-xl p-3 cursor-pointer transition ${
+              sidebarCollapsed ? "justify-center" : "gap-3"
+            }`}
           >
-            <div className="h-8 w-8 rounded-full bg-control-cyan/15 flex items-center justify-center font-bold text-control-cyan text-xs">
+            <div className="h-8 w-8 shrink-0 rounded-full bg-control-cyan/15 flex items-center justify-center font-bold text-control-cyan text-xs">
               {(user?.email || "OP").substring(0, 2).toUpperCase()}
             </div>
-            <div className="min-w-0">
-              <p className="text-xs font-bold text-control-text-bright truncate">{user?.email || "operator@wardis.com"}</p>
-              <span className="text-[9px] uppercase tracking-wider text-control-text font-bold bg-control-panel-light px-1.5 py-0.5 border border-control-border rounded-md">
-                {user?.role || "ADMIN"}
-              </span>
-            </div>
+            {!sidebarCollapsed && (
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-control-text-bright truncate">{user?.email || "operator@wardis.com"}</p>
+                <span className="text-[9px] uppercase tracking-wider text-control-text font-bold bg-control-panel-light px-1.5 py-0.5 border border-control-border rounded-md">
+                  {user?.role || "ADMIN"}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Language Selector, Theme Switcher & Logout */}
@@ -207,30 +245,39 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
             <button
               type="button"
               onClick={() => setLanguage(language === "fr" ? "en" : "fr")}
-              className="w-full flex items-center justify-between rounded-lg border border-control-border bg-control-panel-light hover:bg-control-panel-light/80 px-3 py-2 text-xs font-bold uppercase tracking-wider text-control-text cursor-pointer transition"
+              className={`w-full flex items-center justify-between rounded-lg border border-control-border bg-control-panel-light hover:bg-control-panel-light/80 px-3 py-2 text-xs font-bold uppercase tracking-wider text-control-text cursor-pointer transition ${
+                sidebarCollapsed ? "justify-center" : ""
+              }`}
+              title={t("languageLabel")}
             >
               <span className="flex items-center gap-2">
                 <Globe className="h-4 w-4 text-control-cyan" />
-                {language === "fr" ? "Langue: FR" : "Language: EN"}
+                {!sidebarCollapsed && <span>{language === "fr" ? "Langue: FR" : "Language: EN"}</span>}
               </span>
-              <span className="text-[10px] text-control-text/60 font-semibold uppercase">{language}</span>
+              {!sidebarCollapsed && <span className="text-[10px] text-control-text/60 font-semibold uppercase">{language}</span>}
             </button>
             <button
               type="button"
               onClick={onToggleTheme}
-              className="w-full flex items-center justify-between rounded-lg border border-control-border bg-control-panel-light hover:bg-control-panel-light/80 px-3 py-2 text-xs font-bold uppercase tracking-wider text-control-text cursor-pointer transition"
+              className={`w-full flex items-center justify-between rounded-lg border border-control-border bg-control-panel-light hover:bg-control-panel-light/80 px-3 py-2 text-xs font-bold uppercase tracking-wider text-control-text cursor-pointer transition ${
+                sidebarCollapsed ? "justify-center" : ""
+              }`}
+              title={theme === "dark" ? t("themeToggleLightLabel") : t("themeToggleDarkLabel")}
             >
               <span className="flex items-center gap-2">
                 {theme === "dark" ? <Sun className="h-4 w-4 text-control-amber" /> : <Moon className="h-4 w-4 text-control-cyan" />}
-                {theme === "dark" ? t("themeToggleLightLabel") : t("themeToggleDarkLabel")}
+                {!sidebarCollapsed && <span>{theme === "dark" ? t("themeToggleLightLabel") : t("themeToggleDarkLabel")}</span>}
               </span>
             </button>
             <button
               onClick={() => logout()}
-              className="w-full flex items-center gap-2 justify-center rounded-lg border border-control-red/20 bg-control-red/10 px-3 py-2 text-xs font-bold uppercase tracking-wider text-control-red transition hover:bg-control-red/15 cursor-pointer"
+              className={`w-full flex items-center justify-center rounded-lg border border-control-red/20 bg-control-red/10 px-3 py-2 text-xs font-bold uppercase tracking-wider text-control-red transition hover:bg-control-red/15 cursor-pointer ${
+                sidebarCollapsed ? "" : "gap-2"
+              }`}
+              title={t("logoutButton")}
             >
-              <LogOut className="h-4 w-4" />
-              {t("logoutButton")}
+              <LogOut className="h-4 w-4 shrink-0" />
+              {!sidebarCollapsed && <span>{t("logoutButton")}</span>}
             </button>
           </div>
         </div>
@@ -239,24 +286,39 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
       {/* Right Content Area */}
       <main className="flex-1 flex flex-col overflow-hidden bg-control-bg">
         
-        {/* Browser-like top tabs bar */}
+        {/* Browser-like top tabs bar (with Drag and Drop) */}
         <div className="flex items-center bg-control-panel border-b border-control-border px-4 py-1.5 gap-1 shrink-0 h-11 select-none overflow-x-auto relative z-20">
+          
+          {/* Quick sidebar trigger in header in case it is fully closed or for utility */}
+          {sidebarCollapsed && (
+            <button 
+              onClick={() => setSidebarCollapsed(false)}
+              className="mr-2 p-1.5 rounded bg-control-panel-light border border-control-border/60 text-control-text-bright hover:text-control-cyan transition cursor-pointer"
+            >
+              <Menu className="h-4 w-4" />
+            </button>
+          )}
+
           <div className="flex items-center gap-1.5 flex-1 overflow-x-auto">
-            {tabs.map((tab) => {
+            {tabs.map((tab, idx) => {
               const TabIcon = getTabIcon(tab.type);
               const isActive = tab.id === activeTabId;
               return (
                 <div
                   key={tab.id}
                   onClick={() => setActiveTabId(tab.id)}
-                  className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wider cursor-pointer transition border duration-150 shrink-0 ${
+                  draggable={true}
+                  onDragStart={(e) => handleDragStart(e, idx)}
+                  onDragOver={(e) => handleDragOver(e, idx)}
+                  onDragEnd={handleDragEnd}
+                  className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wider cursor-grab active:cursor-grabbing transition border duration-150 shrink-0 ${
                     isActive
                       ? "bg-control-cyan border-control-cyan text-white shadow-sm shadow-control-cyan/15"
                       : "bg-control-panel-light border-control-border text-control-text hover:text-control-text-bright hover:bg-control-panel-light/80"
                   }`}
                 >
-                  {TabIcon && <TabIcon className="h-3.5 w-3.5 shrink-0" />}
-                  <span>{t(tab.title as TranslationKey)}</span>
+                  {TabIcon && <TabIcon className="h-3.5 w-3.5 shrink-0 pointer-events-none" />}
+                  <span className="pointer-events-none">{t(tab.title as TranslationKey)}</span>
                   {tab.closable && (
                     <button
                       onClick={(e) => {
@@ -420,23 +482,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
             </div>
           )}
         </div>
-        
-        {/* Simple footer with status log bar */}
-        <footer className="border-t border-control-border bg-control-panel px-6 py-3 flex items-center justify-between gap-4 text-xs font-mono select-none shrink-0">
-          <div className="flex items-center gap-2 text-[10px] text-control-text">
-            <Terminal className="h-3.5 w-3.5 text-control-cyan shrink-0" />
-            <span className="font-bold uppercase tracking-wider">{t("lastActivity")}</span>
-            <span className="truncate max-w-md">
-              {sysLogs.length > 0 
-                ? `${sysLogs[sysLogs.length - 1].time} • ${t(sysLogs[sysLogs.length - 1].key, sysLogs[sysLogs.length - 1].variables)}` 
-                : t("dashboardReady")}
-            </span>
-          </div>
-          <div className="flex items-center gap-2 text-[10px] text-control-text shrink-0">
-            <Cpu className="h-3.5 w-3.5 text-control-cyan" />
-            <span>{t("operatorId", { id: user?.id ? user.id.slice(0, 8) : "00000000" })}</span>
-          </div>
-        </footer>
       </main>
     </div>
   );
