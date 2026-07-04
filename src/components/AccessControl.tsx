@@ -188,7 +188,7 @@ export const AccessControl: React.FC = () => {
           <button
             onClick={handleRefresh}
             disabled={loading}
-            className="flex items-center gap-1.5 border border-control-border bg-control-panel-light hover:bg-control-panel-light/80 text-control-cyan text-xs py-1.5 px-3 tracking-wider cursor-pointer font-bold transition-all hover:border-control-cyan/60 rounded-none disabled:opacity-50"
+            className="flex items-center gap-1.5 border border-control-border bg-control-panel-light hover:bg-control-panel-light/80 text-control-cyan text-xs py-1.5 px-3.5 tracking-wider cursor-pointer font-bold transition-all hover:border-control-cyan/60 rounded-lg disabled:opacity-50"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
             <span>SYNC GATEWAY</span>
@@ -260,7 +260,7 @@ export const AccessControl: React.FC = () => {
                   return (
                     <div 
                       key={door.id}
-                      className="bg-control-panel border border-control-border p-4 brackets flex flex-col justify-between min-h-[160px] relative group"
+                      className="bg-control-panel border border-control-border rounded-xl overflow-hidden p-4 flex flex-col justify-between min-h-[160px] relative group shadow-sm hover:border-control-cyan/45 transition-all duration-200"
                     >
                       {/* Top status indicator line */}
                       <div className={`absolute top-0 left-0 right-0 h-[2px] ${

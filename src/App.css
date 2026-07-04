@@ -1,67 +1,47 @@
 @import "tailwindcss";
 
 @theme {
-  --color-control-bg: #060b14;
-  --color-control-panel: #0f172a;
-  --color-control-panel-light: #111c31;
-  --color-control-border: #21304a;
-  --color-control-border-active: #60a5fa;
-  --color-control-cyan: #60a5fa;
-  --color-control-green: #22c55e;
-  --color-control-amber: #f59e0b;
-  --color-control-red: #ef4444;
-  --color-control-text: #94a3b8;
-  --color-control-text-bright: #f8fafc;
+  --color-control-bg: #090d16;
+  --color-control-panel: #111827;
+  --color-control-panel-light: #1f2937;
+  --color-control-border: #1f2937;
+  --color-control-border-active: #6366f1;
+  --color-control-cyan: #6366f1;
+  --color-control-green: #34d399;
+  --color-control-amber: #fbbf24;
+  --color-control-red: #f43f5e;
+  --color-control-text: #9ca3af;
+  --color-control-text-bright: #f9fafb;
 
-  --animate-scanline: scanline 8s linear infinite;
   --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  --animate-glow: glow 2s ease-in-out infinite alternate;
 }
 
 .theme-light {
-  --color-control-bg: #f4f7fb;
+  --color-control-bg: #f8fafc;
   --color-control-panel: #ffffff;
-  --color-control-panel-light: #f8fafc;
-  --color-control-border: #dbe4f0;
-  --color-control-border-active: #2563eb;
-  --color-control-cyan: #2563eb;
-  --color-control-green: #16a34a;
-  --color-control-amber: #d97706;
-  --color-control-red: #dc2626;
+  --color-control-panel-light: #f1f5f9;
+  --color-control-border: #e2e8f0;
+  --color-control-border-active: #4f46e5;
+  --color-control-cyan: #4f46e5;
+  --color-control-green: #10b981;
+  --color-control-amber: #f59e0b;
+  --color-control-red: #e11d48;
   --color-control-text: #475569;
   --color-control-text-bright: #0f172a;
 }
 
 .theme-dark {
-  --color-control-bg: #060b14;
-  --color-control-panel: #0f172a;
-  --color-control-panel-light: #111c31;
-  --color-control-border: #21304a;
-  --color-control-border-active: #60a5fa;
-  --color-control-cyan: #60a5fa;
-  --color-control-green: #22c55e;
-  --color-control-amber: #f59e0b;
-  --color-control-red: #ef4444;
-  --color-control-text: #94a3b8;
-  --color-control-text-bright: #f8fafc;
-}
-
-@keyframes scanline {
-  0% {
-    transform: translateY(-100%);
-  }
-  100% {
-    transform: translateY(100%);
-  }
-}
-
-@keyframes glow {
-  0% {
-    box-shadow: 0 0 20px rgba(37, 99, 235, 0.12);
-  }
-  100% {
-    box-shadow: 0 0 36px rgba(37, 99, 235, 0.2);
-  }
+  --color-control-bg: #090d16;
+  --color-control-panel: #111827;
+  --color-control-panel-light: #1f2937;
+  --color-control-border: #1f2937;
+  --color-control-border-active: #6366f1;
+  --color-control-cyan: #6366f1;
+  --color-control-green: #34d399;
+  --color-control-amber: #fbbf24;
+  --color-control-red: #f43f5e;
+  --color-control-text: #9ca3af;
+  --color-control-text-bright: #f9fafb;
 }
 
 html, body, #root {
@@ -71,28 +51,23 @@ html, body, #root {
   width: 100%;
   background-color: var(--color-control-bg);
   color: var(--color-control-text);
-  font-family: Inter, "Segoe UI", Roboto, -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+  font-family: "Plus Jakarta Sans", "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   overflow: hidden;
   user-select: none;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 * {
   box-sizing: border-box;
 }
 
+/* Clear retro overlays */
 body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background-image: linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
-  background-size: 32px 32px;
-  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.25), transparent 90%);
-  pointer-events: none;
+  display: none;
 }
 
 .digital-grid {
-  background-size: 28px 28px;
-  background-image: linear-gradient(to right, rgba(15, 23, 42, 0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(15, 23, 42, 0.03) 1px, transparent 1px);
+  /* Empty class to prevent errors but remove grid lines */
 }
 
 .wardis-shell {
@@ -103,86 +78,90 @@ body::before {
 .wardis-panel {
   background: var(--color-control-panel);
   border: 1px solid var(--color-control-border);
-  box-shadow: 0 20px 60px rgba(2, 6, 23, 0.12);
-  backdrop-filter: blur(18px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  border-radius: 1rem;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .wardis-card {
   background: var(--color-control-panel);
   border: 1px solid var(--color-control-border);
-  box-shadow: 0 10px 32px rgba(2, 6, 23, 0.06);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+  border-radius: 0.75rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.wardis-card:hover {
+  border-color: var(--color-control-cyan);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  transform: translateY(-1px);
 }
 
 .wardis-chip {
   background: var(--color-control-panel-light);
   border: 1px solid var(--color-control-border);
   color: var(--color-control-text-bright);
+  border-radius: 9999px;
+  transition: all 0.2s ease;
 }
 
 .wardis-input {
   background: var(--color-control-panel-light);
   border: 1px solid var(--color-control-border);
   color: var(--color-control-text-bright);
+  transition: all 0.2s ease;
+  border-radius: 0.5rem;
+}
+
+.wardis-input:focus {
+  border-color: var(--color-control-border-active);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+  outline: none;
 }
 
 .wardis-input::placeholder {
   color: var(--color-control-text);
+  opacity: 0.6;
 }
 
 .wardis-button {
-  background: linear-gradient(135deg, var(--color-control-cyan), #3b82f6);
+  background: var(--color-control-cyan);
   color: white;
-  box-shadow: 0 12px 30px rgba(37, 99, 235, 0.22);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+  transition: all 0.2s ease;
+  border-radius: 0.5rem;
+}
+
+.wardis-button:hover {
+  opacity: 0.95;
+  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.25);
+  transform: translateY(-0.5px);
 }
 
 .wardis-orb {
-  background: linear-gradient(135deg, var(--color-control-cyan), #7c3aed);
-  box-shadow: 0 10px 30px rgba(37, 99, 235, 0.25);
+  background: linear-gradient(135deg, var(--color-control-cyan), #818cf8);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.2);
 }
 
 .crt-overlay::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(180deg, rgba(255,255,255,0.16), transparent 20%, rgba(15,23,42,0.04));
-  mix-blend-mode: soft-light;
+  display: none;
 }
 
-.brackets {
-  position: relative;
-}
 .brackets::before, .brackets::after {
-  content: "";
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  border-color: var(--color-control-cyan);
-  border-style: solid;
-  pointer-events: none;
-}
-.brackets::before {
-  top: -1px;
-  left: -1px;
-  border-width: 1px 0 0 1px;
-}
-.brackets::after {
-  bottom: -1px;
-  right: -1px;
-  border-width: 0 1px 1px 0;
+  display: none; /* remove tactical military corners */
 }
 
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.45);
+  background: rgba(156, 163, 175, 0.25);
   border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(37, 99, 235, 0.6);
+  background: rgba(99, 102, 241, 0.4);
 }

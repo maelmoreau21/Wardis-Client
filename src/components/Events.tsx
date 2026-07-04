@@ -159,7 +159,7 @@ export const Events: React.FC = () => {
 
           <button
             onClick={clearEvents}
-            className="flex items-center gap-1.5 border border-control-border bg-control-panel-light hover:bg-control-panel-light/80 text-control-cyan hover:text-control-cyan-bright py-1.5 px-3 tracking-wider cursor-pointer font-bold transition-all hover:border-control-cyan/60 rounded-none"
+            className="flex items-center gap-1.5 border border-control-border bg-control-panel-light hover:bg-control-panel-light/80 text-control-cyan hover:text-control-cyan-bright py-1.5 px-3.5 tracking-wider cursor-pointer font-bold transition-all hover:border-control-cyan/60 rounded-lg"
           >
             <Trash2 className="h-3.5 w-3.5" />
             <span>CLEAR FEED</span>
@@ -168,7 +168,7 @@ export const Events: React.FC = () => {
           <button
             onClick={handleRefresh}
             disabled={loading}
-            className="flex items-center gap-1.5 border border-control-border bg-control-panel-light hover:bg-control-panel-light/80 text-control-cyan hover:text-control-cyan-bright py-1.5 px-3 tracking-wider cursor-pointer font-bold transition-all hover:border-control-cyan/60 rounded-none disabled:opacity-50"
+            className="flex items-center gap-1.5 border border-control-border bg-control-panel-light hover:bg-control-panel-light/80 text-control-cyan hover:text-control-cyan-bright py-1.5 px-3.5 tracking-wider cursor-pointer font-bold transition-all hover:border-control-cyan/60 rounded-lg disabled:opacity-50"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
             <span>SYNC GATEWAY</span>
@@ -193,7 +193,7 @@ export const Events: React.FC = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Query badge, camera, status..."
-              className="bg-control-bg border border-control-border text-control-text-bright p-2 text-xs focus:border-control-cyan focus:outline-none placeholder-control-text/30 rounded-none w-full"
+              className="wardis-input w-full p-2 text-xs focus:border-control-cyan outline-none"
             />
           </div>
 
@@ -389,7 +389,7 @@ export const Events: React.FC = () => {
                             ID: {event.id}
                           </span>
                         </div>
-                        <pre className="bg-control-panel-light/20 p-3 text-[10px] leading-relaxed text-control-cyan overflow-auto max-h-60 rounded-none font-mono">
+                        <pre className="bg-control-panel-light/20 p-3 text-[10px] leading-relaxed text-control-cyan overflow-auto max-h-60 rounded-lg font-mono">
                           {JSON.stringify(event.details || event, null, 2)}
                         </pre>
                       </div>

@@ -126,7 +126,7 @@ export const Alarms: React.FC = () => {
       {notification && (
         <div className="bg-control-red/10 border-b-2 border-control-red p-4 animate-pulse shrink-0 flex items-center justify-between z-50">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-control-red text-control-text-bright rounded-none">
+            <div className="p-2 bg-control-red text-control-text-bright rounded-lg">
               <BellRing className="h-6 w-6 animate-bounce" />
             </div>
             <div>
@@ -227,7 +227,7 @@ export const Alarms: React.FC = () => {
         <div className="lg:col-span-8 flex flex-col gap-4 min-h-0">
           
           {/* Zones Box */}
-          <div className="bg-control-panel/50 border border-control-border p-4 brackets flex flex-col">
+          <div className="bg-control-panel/50 border border-control-border rounded-xl p-4 flex flex-col shadow-xs">
             <div className="flex items-center justify-between mb-4 border-b border-control-border/60 pb-2">
               <h3 className="text-xs font-bold uppercase tracking-widest text-control-cyan font-mono flex items-center gap-1.5">
                 <Activity className="h-3.5 w-3.5" />
@@ -298,7 +298,7 @@ export const Alarms: React.FC = () => {
                         <button
                           onClick={() => handleToggleZone(zone)}
                           disabled={!isAdmin}
-                          className={`w-full py-1.5 border font-bold font-mono text-[10px] tracking-widest transition-all cursor-pointer rounded-none disabled:opacity-40 disabled:cursor-not-allowed ${
+                          className={`w-full py-1.5 border font-bold font-mono text-[10px] tracking-widest transition-all cursor-pointer rounded-lg disabled:opacity-40 disabled:cursor-not-allowed ${
                             isArmed 
                               ? "border-control-green/60 bg-control-green/5 hover:bg-control-green/10 text-control-green"
                               : "border-control-red/60 bg-control-red/5 hover:bg-control-red/10 text-control-red"
@@ -315,7 +315,7 @@ export const Alarms: React.FC = () => {
           </div>
 
           {/* Sensors & Testing Board */}
-          <div className="bg-control-panel/50 border border-control-border p-4 brackets flex-1 flex flex-col min-h-[300px]">
+          <div className="bg-control-panel/50 border border-control-border rounded-xl p-4 flex-1 flex flex-col min-h-[300px] shadow-xs">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 border-b border-control-border/60 pb-2 gap-2">
               <h3 className="text-xs font-bold uppercase tracking-widest text-control-cyan font-mono flex items-center gap-1.5">
                 <Terminal className="h-3.5 w-3.5" />
@@ -391,7 +391,7 @@ export const Alarms: React.FC = () => {
                           </span>
                           <button
                             onClick={() => handleTriggerSensor(sensor.id)}
-                            className={`px-3 py-1.5 border flex items-center gap-1 text-[9px] font-bold tracking-wider cursor-pointer rounded-none transition-all ${
+                            className={`px-3 py-1.5 border flex items-center gap-1 text-[9px] font-bold tracking-wider cursor-pointer rounded-lg transition-all ${
                               isZoneArmed
                                 ? "border-control-red/60 bg-control-red/5 hover:bg-control-red/10 text-control-red"
                                 : "border-control-border bg-control-panel hover:bg-control-panel-light text-control-text"
@@ -411,7 +411,7 @@ export const Alarms: React.FC = () => {
         </div>
 
         {/* Right Column (Active Alarms) */}
-        <div className="lg:col-span-4 flex flex-col min-h-0 bg-control-panel/50 border border-control-border p-4 brackets">
+        <div className="lg:col-span-4 flex flex-col min-h-0 bg-control-panel/50 border border-control-border rounded-xl p-4 shadow-xs">
           <div className="flex items-center justify-between mb-4 border-b border-control-border/60 pb-2">
             <h3 className="text-xs font-bold uppercase tracking-widest text-control-red font-mono flex items-center gap-1.5">
               <AlertTriangle className="h-4 w-4" />

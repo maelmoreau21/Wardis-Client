@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuthStore } from "../store/authStore";
-import { Shield, ShieldAlert, Eye, EyeOff, Loader2, Camera, DoorOpen, BellRing, Moon, Sun } from "lucide-react";
+import { Shield, ShieldAlert, Eye, EyeOff, Camera, DoorOpen, BellRing, Moon, Sun } from "lucide-react";
 
 interface LoginProps {
   theme: "dark" | "light";
@@ -47,149 +47,169 @@ export const Login: React.FC<LoginProps> = ({ theme, onToggleTheme }) => {
   };
 
   return (
-    <div className="relative min-h-screen w-full wardis-shell digital-grid flex items-center justify-center p-4 overflow-hidden crt-overlay">
-      <div className="absolute inset-0 bg-gradient-to-br from-control-cyan/10 via-transparent to-control-green/10" />
+    <div className="relative min-h-screen w-full wardis-shell flex items-center justify-center p-4 sm:p-6 md:p-8 overflow-hidden">
+      {/* Background soft glowing lights */}
+      <div className="absolute inset-0 bg-gradient-to-tr from-control-cyan/5 via-transparent to-control-green/5 pointer-events-none" />
 
-      <div className="relative w-full max-w-6xl grid gap-6 lg:grid-cols-[1.02fr_0.98fr]">
-        <div className="wardis-panel rounded-[28px] p-6 sm:p-8">
-          <div className="flex items-center justify-between gap-3">
-            <div className="inline-flex items-center gap-2 rounded-full wardis-chip px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-control-cyan">
-              <Shield className="h-3.5 w-3.5" />
-              Accès sécurisé
+      <div className="relative w-full max-w-5xl grid gap-6 lg:grid-cols-12 items-stretch">
+        
+        {/* Left Branding Side */}
+        <div className="lg:col-span-7 wardis-panel p-8 sm:p-10 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className="inline-flex items-center gap-2 rounded-full border border-control-cyan/15 bg-control-cyan/5 px-3.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-control-cyan">
+                <Shield className="h-3.5 w-3.5" />
+                Plateforme de Supervision
+              </div>
+              <button
+                type="button"
+                onClick={onToggleTheme}
+                className="flex items-center gap-2 rounded-full border border-control-border bg-control-panel-light hover:bg-control-panel-light/80 px-3.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-control-text transition cursor-pointer"
+              >
+                {theme === "dark" ? <Sun className="h-3.5 w-3.5 text-control-amber" /> : <Moon className="h-3.5 w-3.5 text-control-cyan" />}
+                {theme === "dark" ? "Mode clair" : "Mode sombre"}
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={onToggleTheme}
-              className="flex items-center gap-2 rounded-full wardis-chip px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-control-text"
-            >
-              {theme === "dark" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
-              {theme === "dark" ? "Mode clair" : "Mode sombre"}
-            </button>
-          </div>
 
-          <div className="mt-6 flex items-start justify-between gap-4">
-            <div>
+            <div className="mt-8">
               <div className="flex items-center gap-3">
-                <div className="wardis-orb flex h-11 w-11 items-center justify-center rounded-2xl text-white">
-                  <Shield className="h-5 w-5" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-control-cyan text-white shadow-lg shadow-control-cyan/20">
+                  <Shield className="h-6 w-6" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-semibold text-control-text-bright">Wardis</h1>
-                  <p className="text-sm text-control-cyan">Security Operations Suite</p>
+                  <h1 className="text-3xl font-bold text-control-text-bright tracking-tight">Wardis</h1>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-control-cyan">Security Suite</p>
                 </div>
               </div>
-              <p className="mt-4 max-w-md text-sm leading-6 text-control-text">
-                Une vue claire et rapide sur vos caméras, portes et alertes pour piloter votre sécurité avec précision et efficacité.
+              
+              <p className="mt-5 max-w-md text-sm leading-relaxed text-control-text">
+                Supervision centralisée et performante. Pilotez vos flux vidéo en direct, contrôlez les accès physiques et traitez les alertes de sécurité depuis une console unifiée, simple et efficace.
               </p>
-            </div>
-            <div className="rounded-full wardis-chip px-3 py-1 text-xs font-semibold text-control-text-bright">
-              v0.0.1
             </div>
           </div>
 
-          <div className="mt-8 grid gap-3 sm:grid-cols-3">
-            <div className="wardis-card rounded-2xl p-4">
-              <Camera className="h-5 w-5 text-control-cyan" />
-              <div className="mt-3 text-sm font-semibold text-control-text-bright">Surveillance</div>
-              <p className="mt-1 text-xs text-control-text">Flux vidéo fluides et supervision rapide.</p>
+          {/* Quick Info Grid */}
+          <div className="mt-10 grid gap-4 sm:grid-cols-3">
+            <div className="wardis-card p-4 hover:border-control-cyan/30">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-control-cyan/10 text-control-cyan">
+                <Camera className="h-4 w-4" />
+              </div>
+              <div className="mt-3 text-xs font-bold text-control-text-bright uppercase tracking-wider">Surveillance</div>
+              <p className="mt-1 text-xs text-control-text leading-relaxed">Flux vidéo en temps réel à faible latence.</p>
             </div>
-            <div className="wardis-card rounded-2xl p-4">
-              <DoorOpen className="h-5 w-5 text-control-cyan" />
-              <div className="mt-3 text-sm font-semibold text-control-text-bright">Contrôle d’accès</div>
-              <p className="mt-1 text-xs text-control-text">Gestion simple des portes et badges.</p>
+            
+            <div className="wardis-card p-4 hover:border-control-cyan/30">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-control-cyan/10 text-control-cyan">
+                <DoorOpen className="h-4 w-4" />
+              </div>
+              <div className="mt-3 text-xs font-bold text-control-text-bright uppercase tracking-wider">Accès</div>
+              <p className="mt-1 text-xs text-control-text leading-relaxed">Contrôle à distance des portes et lecteurs.</p>
             </div>
-            <div className="wardis-card rounded-2xl p-4">
-              <BellRing className="h-5 w-5 text-control-cyan" />
-              <div className="mt-3 text-sm font-semibold text-control-text-bright">Alertes</div>
-              <p className="mt-1 text-xs text-control-text">Détection et suivi prioritaires.</p>
+            
+            <div className="wardis-card p-4 hover:border-control-cyan/30">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-control-cyan/10 text-control-cyan">
+                <BellRing className="h-4 w-4" />
+              </div>
+              <div className="mt-3 text-xs font-bold text-control-text-bright uppercase tracking-wider">Alertes</div>
+              <p className="mt-1 text-xs text-control-text leading-relaxed">Notifications instantanées des anomalies.</p>
             </div>
           </div>
         </div>
 
-        <div className="wardis-panel rounded-[28px] p-6 shadow-[0_20px_70px_rgba(15,23,42,0.08)]">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-xl font-semibold text-control-text-bright">Connexion</h2>
-              <p className="mt-1 text-sm text-control-text">Accédez au tableau de bord opérateur.</p>
-            </div>
-            <div className="flex items-center gap-2 rounded-full border border-control-green/20 bg-control-green/10 px-3 py-1 text-xs font-semibold text-control-green">
-              <span className="h-2 w-2 rounded-full bg-control-green" />
-              En ligne
-            </div>
-          </div>
-
-          <div className="mt-5 rounded-2xl border border-control-border bg-control-panel-light p-3 font-mono text-[11px] leading-6 text-control-text">
-            <div className="mb-2 border-b border-control-border/70 pb-2 text-[10px] font-semibold uppercase tracking-[0.25em] text-control-text-bright">
-              Journal système
-            </div>
-            {logs.map((log, idx) => (
-              <div key={idx} className="whitespace-pre-wrap text-control-text">
-                {log}
+        {/* Right Login Form Side */}
+        <div className="lg:col-span-5 wardis-panel p-8 sm:p-10 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-bold text-control-text-bright tracking-tight">Authentification</h2>
+                <p className="mt-1 text-xs text-control-text">Veuillez renseigner vos identifiants.</p>
               </div>
-            ))}
-            {loading && <div className="text-control-amber">Connexion en cours...</div>}
-          </div>
-
-          {error && (
-            <div className="mt-4 flex items-start gap-2 rounded-2xl border border-control-red/30 bg-control-red/10 p-3 text-sm text-control-red">
-              <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-            <div>
-              <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.24em] text-control-cyan">
-                Adresse e-mail
-              </label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="operator@wardis.local"
-                className="wardis-input w-full rounded-2xl px-3 py-2.5 text-sm outline-none transition focus:border-control-cyan"
-              />
+              <div className="flex items-center gap-1.5 rounded-full border border-control-green/20 bg-control-green/5 px-3 py-1 text-[10px] font-semibold text-control-green">
+                <span className="h-1.5 w-1.5 rounded-full bg-control-green animate-pulse" />
+                Service actif
+              </div>
             </div>
 
-            <div>
-              <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.24em] text-control-cyan">
-                Code d’accès
-              </label>
-              <div className="relative">
+            {/* Terminal logs styled cleanly as status list */}
+            <div className="mt-6 rounded-xl border border-control-border bg-control-panel-light/30 p-4 font-mono text-[10px] text-control-text/90">
+              <div className="mb-2 border-b border-control-border/60 pb-2 text-[9px] font-semibold uppercase tracking-[0.2em] text-control-text-bright">
+                Statut de la Console
+              </div>
+              <div className="space-y-1.5 max-h-[110px] overflow-y-auto">
+                {logs.map((log, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <span className="h-1 w-1 rounded-full bg-control-cyan" />
+                    <span>{log}</span>
+                  </div>
+                ))}
+                {loading && <div className="text-control-amber animate-pulse">Validation des accès...</div>}
+              </div>
+            </div>
+
+            {error && (
+              <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-control-red/20 bg-control-red/5 p-3.5 text-xs text-control-red font-semibold">
+                <ShieldAlert className="h-4 w-4 shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+              <div>
+                <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-control-cyan">
+                  Adresse e-mail
+                </label>
                 <input
-                  type={showPassword ? "text" : "password"}
+                  type="email"
                   required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••••••"
-                  className="wardis-input w-full rounded-2xl px-3 py-2.5 pr-10 text-sm outline-none transition focus:border-control-cyan"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="operator@wardis.local"
+                  className="wardis-input w-full px-3 py-2.5 text-sm outline-none transition focus:border-control-cyan"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-control-text transition hover:text-control-cyan"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
               </div>
-            </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="wardis-button flex w-full items-center justify-center gap-2 rounded-2xl border border-control-cyan/20 px-4 py-3 text-sm font-semibold transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              {loading ? (
-                <><Loader2 className="h-4 w-4 animate-spin" /> Vérification...</>
-              ) : (
-                <><Shield className="h-4 w-4" /> Se connecter</>
-              )}
-            </button>
-          </form>
+              <div>
+                <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-control-cyan">
+                  Code d’accès
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••••••"
+                    className="wardis-input w-full px-3 py-2.5 pr-10 text-sm outline-none transition focus:border-control-cyan"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-control-text hover:text-control-cyan transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
 
-          <div className="mt-5 text-center text-[11px] uppercase tracking-[0.2em] text-control-text/70">
-            Personnel autorisé uniquement • Journalisé pour l’audit
+              <button
+                type="submit"
+                disabled={loading}
+                className="wardis-button flex w-full items-center justify-center gap-2 px-4 py-3 text-sm font-semibold transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70 cursor-pointer"
+              >
+                {loading ? (
+                  <>Validation en cours...</>
+                ) : (
+                  <>
+                    <Shield className="h-4 w-4" />
+                    Se connecter
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+
+          <div className="mt-8 text-center text-[10px] uppercase tracking-wider text-control-text/50">
+            Console réservée au personnel autorisé
           </div>
         </div>
       </div>

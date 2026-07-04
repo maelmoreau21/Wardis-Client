@@ -81,113 +81,29 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
   ] as const;
 
   return (
-    <div className="min-h-screen w-full wardis-shell digital-grid flex flex-col overflow-hidden select-none">
-      <header className="border-b border-control-border bg-control-panel/95 px-4 py-4 backdrop-blur md:px-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+    <div className="flex h-screen w-screen bg-control-bg overflow-hidden text-control-text select-none">
+      
+      {/* Sidebar navigation */}
+      <aside className="w-64 bg-control-panel border-r border-control-border flex flex-col justify-between shrink-0">
+        <div className="flex flex-col gap-6 p-5">
+          {/* Logo and Brand */}
           <div className="flex items-center gap-3">
-            <div className="wardis-orb flex h-11 w-11 items-center justify-center rounded-2xl text-white">
-              <Sparkles className="h-5 w-5" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-control-cyan text-white shadow-md shadow-control-cyan/20">
+              <Sparkles className="h-4 w-4" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-lg font-semibold text-control-text-bright">Wardis</h1>
-                <span className="rounded-full border border-control-cyan/20 bg-control-cyan/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-control-cyan">
+                <span className="text-base font-bold text-control-text-bright tracking-tight">Wardis</span>
+                <span className="rounded-full border border-control-cyan/20 bg-control-cyan/10 px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-[0.15em] text-control-cyan">
                   v0.0.1
                 </span>
               </div>
-              <p className="text-sm text-control-text">Console de supervision simple et efficace</p>
+              <p className="text-[10px] text-control-text/75 uppercase tracking-wider font-semibold">Supervision</p>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 md:ml-auto">
-            <div className="flex items-center gap-2 rounded-full border border-control-border bg-control-panel-light px-3 py-2 text-sm text-control-text">
-              <Clock className="h-4 w-4 text-control-cyan" />
-              {time.toLocaleTimeString()}
-            </div>
-            <button
-              type="button"
-              onClick={onToggleTheme}
-              className="flex items-center gap-2 rounded-full wardis-chip px-3 py-2 text-sm text-control-text"
-            >
-              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-              {theme === "dark" ? "Clair" : "Sombre"}
-            </button>
-            <div className="hidden items-center gap-2 rounded-full border border-control-border bg-control-panel-light px-3 py-2 text-sm text-control-text lg:flex">
-              <span className={`h-2.5 w-2.5 rounded-full ${metrics.alerts > 0 ? "bg-control-red" : "bg-control-green"}`} />
-              {metrics.alerts > 0 ? `${metrics.alerts} alerte(s)` : "aucune alerte"}
-            </div>
-            <button
-              onClick={() => logout()}
-              className="flex items-center gap-2 rounded-full border border-control-red/20 bg-control-red/10 px-3 py-2 text-sm font-medium text-control-red transition hover:bg-control-red/15"
-            >
-              <LogOut className="h-4 w-4" />
-              Déconnexion
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <main className="flex-1 overflow-hidden p-4 md:p-6">
-        <div className="flex h-full flex-col gap-4">
-          <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
-            <div className="rounded-3xl border border-control-border bg-control-panel/95 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.24em] text-control-cyan">Résumé opérateur</p>
-                  <h2 className="mt-2 text-2xl font-semibold text-control-text-bright">Tout est prêt pour une supervision rapide.</h2>
-                </div>
-                <div className="rounded-full border border-control-border bg-control-panel-light px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-control-text">
-                  Latence {latency}ms
-                </div>
-              </div>
-
-              <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                <div className="rounded-2xl border border-control-border bg-control-panel-light p-4">
-                  <div className="text-xs uppercase tracking-[0.24em] text-control-cyan">Caméras actives</div>
-                  <div className="mt-2 text-2xl font-semibold text-control-text-bright">{metrics.activeCameras}</div>
-                  <div className="mt-1 text-sm text-control-text">flux synchronisés</div>
-                </div>
-                <div className="rounded-2xl border border-control-border bg-control-panel-light p-4">
-                  <div className="text-xs uppercase tracking-[0.24em] text-control-cyan">Portes</div>
-                  <div className="mt-2 text-2xl font-semibold text-control-text-bright">{metrics.openDoors}/{doors.length}</div>
-                  <div className="mt-1 text-sm text-control-text">ouvertes / configurées</div>
-                </div>
-                <div className="rounded-2xl border border-control-border bg-control-panel-light p-4">
-                  <div className="text-xs uppercase tracking-[0.24em] text-control-cyan">Alertes</div>
-                  <div className="mt-2 text-2xl font-semibold text-control-text-bright">{metrics.alerts}</div>
-                  <div className="mt-1 text-sm text-control-text">à traiter</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-3xl border border-control-border bg-control-panel/95 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.24em] text-control-cyan">Session</p>
-                  <h3 className="mt-1 text-lg font-semibold text-control-text-bright">{user?.email || "admin@wardis.com"}</h3>
-                </div>
-                <div className="rounded-full border border-control-border bg-control-panel-light px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-control-text">
-                  {user?.role || "ADMIN"}
-                </div>
-              </div>
-              <div className="mt-5 space-y-3 rounded-2xl border border-control-border bg-control-panel-light p-4 text-sm text-control-text">
-                <div className="flex items-center justify-between">
-                  <span>État du service</span>
-                  <span className="font-semibold text-control-green">stable</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Connexion NATS</span>
-                  <span className="font-semibold text-control-green">active</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Stockage vidéo</span>
-                  <span className="font-semibold text-control-cyan">OK</span>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <nav className="flex flex-wrap gap-2 rounded-2xl border border-control-border bg-control-panel/80 p-2">
+          {/* Navigation Links */}
+          <nav className="flex flex-col gap-1 mt-4">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.key;
@@ -196,72 +112,178 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
                   key={tab.key}
                   onClick={() => {
                     setActiveTab(tab.key as typeof activeTab);
-                    setSysLogs((prev) => [...prev, `${new Date().toLocaleTimeString()} • ${tab.label}`].slice(-4));
+                    setSysLogs((prev) => [...prev, `${new Date().toLocaleTimeString()} • Onglet : ${tab.label}`].slice(-4));
                   }}
-                  className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition ${
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
                     isActive
-                      ? "bg-control-cyan text-white shadow-sm"
+                      ? "bg-control-cyan text-white shadow-sm shadow-control-cyan/20"
                       : "text-control-text hover:bg-control-panel-light hover:text-control-text-bright"
                   }`}
                 >
-                  <Icon className="h-4 w-4" />
+                  <Icon className="h-4.5 w-4.5" />
                   {tab.label}
                 </button>
               );
             })}
           </nav>
+        </div>
 
+        {/* Bottom Sidebar Panel */}
+        <div className="p-5 border-t border-control-border flex flex-col gap-4">
+          {/* User Profile */}
+          <div className="flex items-center gap-3 bg-control-panel-light/40 border border-control-border/60 rounded-xl p-3">
+            <div className="h-8 w-8 rounded-full bg-control-cyan/15 flex items-center justify-center font-bold text-control-cyan text-xs">
+              {(user?.email || "OP").substring(0, 2).toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-control-text-bright truncate">{user?.email || "operator@wardis.com"}</p>
+              <span className="text-[9px] uppercase tracking-wider text-control-text font-bold bg-control-panel-light px-1.5 py-0.5 border border-control-border rounded-md">
+                {user?.role || "ADMIN"}
+              </span>
+            </div>
+          </div>
+
+          {/* Theme Switcher & Logout */}
+          <div className="flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={onToggleTheme}
+              className="w-full flex items-center justify-between rounded-lg border border-control-border bg-control-panel-light hover:bg-control-panel-light/80 px-3 py-2 text-xs font-bold uppercase tracking-wider text-control-text cursor-pointer transition"
+            >
+              <span className="flex items-center gap-2">
+                {theme === "dark" ? <Sun className="h-4 w-4 text-control-amber" /> : <Moon className="h-4 w-4 text-control-cyan" />}
+                Thème {theme === "dark" ? "Clair" : "Sombre"}
+              </span>
+            </button>
+            <button
+              onClick={() => logout()}
+              className="w-full flex items-center gap-2 justify-center rounded-lg border border-control-red/20 bg-control-red/10 px-3 py-2 text-xs font-bold uppercase tracking-wider text-control-red transition hover:bg-control-red/15 cursor-pointer"
+            >
+              <LogOut className="h-4 w-4" />
+              Déconnexion
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      {/* Right Content Area */}
+      <main className="flex-1 flex flex-col overflow-hidden bg-control-bg">
+        {/* Header Bar */}
+        <header className="border-b border-control-border bg-control-panel px-6 py-4 flex items-center justify-between shadow-sm shrink-0">
+          <div>
+            <h2 className="text-base font-bold text-control-text-bright tracking-tight">
+              {tabs.find(t => t.key === activeTab)?.label}
+            </h2>
+            <p className="text-[10px] text-control-text/80 uppercase tracking-wider">
+              Console de supervision Wardis
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 rounded-full border border-control-border bg-control-panel-light px-3 py-1.5 text-xs text-control-text font-bold">
+              <Clock className="h-3.5 w-3.5 text-control-cyan" />
+              {time.toLocaleTimeString()}
+            </div>
+            
+            <div className="flex items-center gap-2 rounded-full border border-control-border bg-control-panel-light px-3 py-1.5 text-xs text-control-text font-bold">
+              <span className={`h-2 w-2 rounded-full ${metrics.alerts > 0 ? "bg-control-red animate-pulse" : "bg-control-green"}`} />
+              <span>{metrics.alerts > 0 ? `${metrics.alerts} alerte(s)` : "Système stable"}</span>
+            </div>
+          </div>
+        </header>
+
+        {/* Tab Content */}
+        <div className="flex-1 overflow-y-auto p-6 flex flex-col min-h-0">
           {activeTab === "status" && (
-            <div className="flex-1 min-h-0 wardis-panel rounded-[24px] p-5">
-              <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-                <div className="rounded-2xl border border-control-border bg-control-panel-light p-5">
-                  <div className="flex items-center gap-2 text-control-cyan">
-                    <LayoutGrid className="h-4 w-4" />
-                    <span className="text-sm font-semibold uppercase tracking-[0.24em]">Aperçu rapide</span>
+            <div className="flex flex-col gap-6">
+              <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {/* Stats Card 1 */}
+                <div className="wardis-card p-6">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-control-cyan">Caméras actives</div>
+                  <div className="mt-2 text-3xl font-bold text-control-text-bright">{metrics.activeCameras}</div>
+                  <div className="mt-1 text-xs text-control-text">flux vidéo synchronisés</div>
+                </div>
+                {/* Stats Card 2 */}
+                <div className="wardis-card p-6">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-control-cyan">Portes</div>
+                  <div className="mt-2 text-3xl font-bold text-control-text-bright">{metrics.openDoors}/{doors.length}</div>
+                  <div className="mt-1 text-xs text-control-text">ouvertes / configurées</div>
+                </div>
+                {/* Stats Card 3 */}
+                <div className="wardis-card p-6">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-control-cyan">Alertes actives</div>
+                  <div className="mt-2 text-3xl font-bold text-control-text-bright">{metrics.alerts}</div>
+                  <div className="mt-1 text-xs text-control-text">à acquitter en priorité</div>
+                </div>
+              </section>
+
+              <section className="grid gap-6 xl:grid-cols-12">
+                {/* System Health */}
+                <div className="xl:col-span-6 wardis-panel p-6">
+                  <div className="flex items-center justify-between border-b border-control-border/60 pb-3 mb-4">
+                     <h3 className="text-sm font-bold text-control-text-bright uppercase tracking-wider">État des services</h3>
+                     <span className="rounded-full border border-control-border bg-control-panel-light px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-control-text">
+                       Latence: {latency}ms
+                     </span>
                   </div>
-                  <div className="mt-4 space-y-3 text-sm text-control-text">
-                    <p>Le système est prêt à gérer la supervision, les accès et les alertes depuis une interface simplifiée.</p>
-                    <p>Les modules principaux sont disponibles dans la navigation ci-dessus pour passer rapidement d’une vue à l’autre.</p>
+                  <div className="space-y-3.5 text-xs text-control-text">
+                    <div className="flex items-center justify-between">
+                      <span>État général du système</span>
+                      <span className="font-semibold text-control-green uppercase tracking-wider text-[10px] bg-control-green/10 border border-control-green/20 px-2 py-0.5 rounded">stable</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>Serveur NATS</span>
+                      <span className="font-semibold text-control-green uppercase tracking-wider text-[10px] bg-control-green/10 border border-control-green/20 px-2 py-0.5 rounded">connecté</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>Passerelle d'accès</span>
+                      <span className="font-semibold text-control-green uppercase tracking-wider text-[10px] bg-control-green/10 border border-control-green/20 px-2 py-0.5 rounded">en ligne</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>Serveur d'enregistrement vidéo</span>
+                      <span className="font-semibold text-control-green uppercase tracking-wider text-[10px] bg-control-green/10 border border-control-green/20 px-2 py-0.5 rounded">actif</span>
+                    </div>
                   </div>
                 </div>
-                <div className="rounded-2xl border border-control-border bg-control-panel-light p-5">
-                  <div className="flex items-center gap-2 text-control-cyan">
-                    <Terminal className="h-4 w-4" />
-                    <span className="text-sm font-semibold uppercase tracking-[0.24em]">Journal</span>
+
+                {/* Console logs */}
+                <div className="xl:col-span-6 wardis-panel p-6">
+                  <div className="flex items-center justify-between border-b border-control-border/60 pb-3 mb-4">
+                     <h3 className="text-sm font-bold text-control-text-bright uppercase tracking-wider">Journal système</h3>
+                     <Terminal className="h-4 w-4 text-control-cyan" />
                   </div>
-                  <div className="mt-4 space-y-2 font-mono text-xs text-control-text">
+                  <div className="space-y-2.5 font-mono text-[10px] text-control-text leading-relaxed">
                     {sysLogs.map((log, idx) => (
-                      <div key={idx}>{log}</div>
+                      <div key={idx} className="flex items-center gap-2">
+                        <span className="h-1 w-1 rounded-full bg-control-cyan" />
+                        <span>{log}</span>
+                      </div>
                     ))}
                   </div>
                 </div>
-              </div>
+              </section>
             </div>
           )}
+
           {activeTab === "live" && <LiveView />}
           {activeTab === "access" && <AccessControl />}
           {activeTab === "alarms" && <Alarms />}
           {activeTab === "events" && <Events />}
           {activeTab === "map" && <InteractiveMap />}
-
-          <div className="rounded-2xl border border-control-border bg-control-panel/90 p-3">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.24em] text-control-cyan">
-                <Terminal className="h-4 w-4" />
-                Journal en direct
-              </div>
-              <div className="flex-1 overflow-x-auto whitespace-nowrap font-mono text-[11px] text-control-text">
-                {sysLogs.map((log, idx) => (
-                  <span key={idx} className="mr-4">{log}</span>
-                ))}
-              </div>
-              <div className="flex items-center gap-2 text-xs text-control-text">
-                <Cpu className="h-4 w-4 text-control-cyan" />
-                <span>Opérateur {user?.id ? user.id.slice(0, 8) : "00000000"}</span>
-              </div>
-            </div>
-          </div>
         </div>
+        
+        {/* Simple footer with status log bar */}
+        <footer className="border-t border-control-border bg-control-panel px-6 py-3 flex items-center justify-between gap-4 text-xs font-mono select-none shrink-0">
+          <div className="flex items-center gap-2 text-[10px] text-control-text">
+            <Terminal className="h-3.5 w-3.5 text-control-cyan shrink-0" />
+            <span className="font-bold uppercase tracking-wider">Dernière activité :</span>
+            <span className="truncate max-w-md">{sysLogs[sysLogs.length - 1] || "Console prête"}</span>
+          </div>
+          <div className="flex items-center gap-2 text-[10px] text-control-text shrink-0">
+            <Cpu className="h-3.5 w-3.5 text-control-cyan" />
+            <span>ID OP: {user?.id ? user.id.slice(0, 8) : "00000000"}</span>
+          </div>
+        </footer>
       </main>
     </div>
   );

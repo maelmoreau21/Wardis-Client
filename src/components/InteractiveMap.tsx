@@ -353,7 +353,7 @@ export const InteractiveMap: React.FC = () => {
       `}} />
 
       {/* Left Area: The Floor Plan Viewport */}
-      <div className="flex-1 flex flex-col min-h-0 bg-control-panel/40 border border-control-border p-3 brackets relative">
+      <div className="flex-1 flex flex-col min-h-0 bg-control-panel/40 border border-control-border rounded-xl p-3 relative shadow-xs">
         
         {/* Top toolbar */}
         <div className="flex items-center justify-between mb-3 border-b border-control-border/60 pb-2 shrink-0 z-10">
@@ -589,7 +589,7 @@ export const InteractiveMap: React.FC = () => {
       </div>
 
       {/* Right Area: Futuristic Control panel HUD for Selected Node Details */}
-      <div className="w-full lg:w-[320px] bg-control-panel/50 border border-control-border p-4 brackets flex flex-col justify-between shrink-0 font-mono text-xs">
+      <div className="w-full lg:w-[320px] bg-control-panel/50 border border-control-border rounded-xl p-4 flex flex-col justify-between shrink-0 font-mono text-xs shadow-xs">
         
         {/* Info panel header */}
         <div className="flex items-center justify-between border-b border-control-border/60 pb-2 mb-3">

@@ -323,10 +323,10 @@ const CameraPlayer: React.FC<CameraPlayerProps> = ({
     <div 
       onClick={onClick}
       onDoubleClick={onDoubleClick}
-      className={`relative w-full h-full bg-control-panel flex flex-col border brackets overflow-hidden group select-none cursor-pointer transition-all ${
+      className={`relative w-full h-full bg-control-panel flex flex-col border border-control-border rounded-xl overflow-hidden group select-none cursor-pointer transition-all ${
         isSelected 
-          ? "border-control-cyan shadow-[0_0_15px_rgba(0,240,255,0.4)] z-10" 
-          : "border-control-border hover:border-control-border/60"
+          ? "border-control-cyan shadow-[0_0_15px_rgba(99,102,241,0.25)] z-10" 
+          : "hover:border-control-cyan/45"
       }`}
     >
       
@@ -1023,7 +1023,7 @@ export const LiveView: React.FC = () => {
                       <div className="z-10 flex flex-col items-center gap-2">
                         <button 
                           onClick={(e) => { e.stopPropagation(); setActivePickerSlot(idx); }}
-                          className="p-3 border border-control-border bg-control-panel-light text-control-cyan/40 hover:text-control-cyan hover:border-control-cyan/50 hover:glow transition-all cursor-pointer rounded-none"
+                          className="p-3 border border-control-border bg-control-panel-light text-control-cyan/40 hover:text-control-cyan hover:border-control-cyan/50 hover:shadow-md transition-all cursor-pointer rounded-xl"
                         >
                           <Plus className="h-6 w-6" />
                         </button>
@@ -1046,7 +1046,7 @@ export const LiveView: React.FC = () => {
       </div>
 
         {/* PTZ Lateral Sidebar Panel */}
-        <div className="w-full lg:w-72 bg-control-panel border border-control-border p-4 font-mono select-none flex flex-col shrink-0 brackets gap-4">
+        <div className="w-full lg:w-72 bg-control-panel border border-control-border rounded-xl p-4 font-mono select-none flex flex-col shrink-0 gap-4 shadow-sm">
           <div className="flex items-center justify-between border-b border-control-border pb-2">
             <span className="text-xs text-control-text-bright font-bold uppercase tracking-wider">PTZ Camera Control</span>
             <span className="h-1.5 w-1.5 rounded-full bg-control-cyan animate-pulse" />
