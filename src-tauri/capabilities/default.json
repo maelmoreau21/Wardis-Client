@@ -12,7 +12,10 @@
     "core:webview:allow-create-webview-window",
     {
       "identifier": "http:allow-fetch",
-      "allow": [{ "url": "http://localhost:8080/*" }]
+      "allow": [
+        { "url": "http://*" },
+        { "url": "https://*" }
+      ]
     }
   ]
 }

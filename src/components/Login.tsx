@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuthStore } from "../store/authStore";
+import { fetch } from "@tauri-apps/plugin-http";
 import { Shield, ShieldAlert, Eye, EyeOff, Camera, DoorOpen, BellRing, Moon, Sun } from "lucide-react";
 
 interface LoginProps {
@@ -13,10 +14,51 @@ export const Login: React.FC<LoginProps> = ({ theme, onToggleTheme }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isServerActive, setIsServerActive] = useState<boolean | null>(null);
 
   useEffect(() => {
     return () => clearError();
   }, [clearError]);
+
+  useEffect(() => {
+    let active = true;
+    if (!serverUrl.trim()) {
+      setIsServerActive(false);
+      return;
+    }
+
+    const checkHealth = async () => {
+      let normalized = serverUrl.trim();
+      if (!/^https?:\/\//i.test(normalized)) {
+        normalized = "http://" + normalized;
+      }
+      try {
+        const parsed = new URL(normalized);
+        const apiBase = parsed.port ? normalized : `${parsed.protocol}//${parsed.hostname}:8080`;
+        
+        const response = await fetch(`${apiBase}/health`, { method: "GET" });
+        if (response.ok && active) {
+          setIsServerActive(true);
+        } else if (active) {
+          setIsServerActive(false);
+        }
+      } catch {
+        if (active) {
+          setIsServerActive(false);
+        }
+      }
+    };
+
+    setIsServerActive(null);
+    checkHealth();
+
+    const interval = setInterval(checkHealth, 8000);
+
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, [serverUrl]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,10 +145,24 @@ export const Login: React.FC<LoginProps> = ({ theme, onToggleTheme }) => {
                 <h2 className="text-xl font-bold text-control-text-bright tracking-tight">Authentification</h2>
                 <p className="mt-1 text-xs text-control-text">Veuillez renseigner vos identifiants.</p>
               </div>
-              <div className="flex items-center gap-1.5 rounded-full border border-control-green/20 bg-control-green/5 px-3 py-1 text-[10px] font-semibold text-control-green">
-                <span className="h-1.5 w-1.5 rounded-full bg-control-green animate-pulse" />
-                Service actif
-              </div>
+              {isServerActive === true && (
+                <div className="flex items-center gap-1.5 rounded-full border border-control-green/20 bg-control-green/5 px-3 py-1 text-[10px] font-semibold text-control-green">
+                  <span className="h-1.5 w-1.5 rounded-full bg-control-green animate-pulse" />
+                  Service actif
+                </div>
+              )}
+              {isServerActive === false && (
+                <div className="flex items-center gap-1.5 rounded-full border border-control-red/20 bg-control-red/5 px-3 py-1 text-[10px] font-semibold text-control-red">
+                  <span className="h-1.5 w-1.5 rounded-full bg-control-red" />
+                  Service inactif
+                </div>
+              )}
+              {isServerActive === null && (
+                <div className="flex items-center gap-1.5 rounded-full border border-control-amber/20 bg-control-amber/5 px-3 py-1 text-[10px] font-semibold text-control-amber">
+                  <span className="h-1.5 w-1.5 rounded-full bg-control-amber animate-pulse" />
+                  Vérification...
+                </div>
+              )}
             </div>
 
             {error && (
@@ -140,7 +196,7 @@ export const Login: React.FC<LoginProps> = ({ theme, onToggleTheme }) => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin ou operator"
+                  placeholder="Nom d'utilisateur"
                   className="wardis-input w-full px-3 py-2.5 text-sm outline-none transition focus:border-control-cyan"
                 />
               </div>
