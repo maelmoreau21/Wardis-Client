@@ -30,16 +30,26 @@ interface CameraPlayerProps {
   cameraId: string;
   cameraNom: string;
   statut: string;
+  isZoomed?: boolean;
   onClear: () => void;
+  onDoubleClick?: () => void;
 }
 
-const CameraPlayer: React.FC<CameraPlayerProps> = ({ cameraId, cameraNom, statut, onClear }) => {
+const CameraPlayer: React.FC<CameraPlayerProps> = ({ 
+  cameraId, 
+  cameraNom, 
+  statut, 
+  isZoomed = false, 
+  onClear, 
+  onDoubleClick 
+}) => {
   const [status, setStatus] = useState<"connecting" | "playing" | "error" | "no-signal">("connecting");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [showConfig, setShowConfig] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const generateStreamToken = useCameraStore((state) => state.generateStreamToken);
+  const configureWHEPStream = useCameraStore((state) => state.configureWHEPStream);
   const [retryTrigger, setRetryTrigger] = useState(0);
 
   const handleDetachStream = async () => {
@@ -77,12 +87,31 @@ const CameraPlayer: React.FC<CameraPlayerProps> = ({ cameraId, cameraNom, statut
     const interval = setInterval(() => {
       setMetrics({
         fps: Math.floor(Math.random() * 3) + 29, // 29-31 fps
-        bitrate: Math.floor(Math.random() * 300) + 2000, // 2000-2300 kbps
-        latency: Math.floor(Math.random() * 20) + 110, // 110-130 ms
+        bitrate: isZoomed 
+          ? Math.floor(Math.random() * 800) + 6000 // 6000-6800 kbps for high-res
+          : Math.floor(Math.random() * 300) + 2000, // 2000-2300 kbps for low-res
+        latency: isZoomed
+          ? Math.floor(Math.random() * 500) + 2500 // 2.5-3.0s latency for HLS
+          : Math.floor(Math.random() * 20) + 110, // 110-130 ms latency for WHEP
       });
     }, 3000);
     return () => clearInterval(interval);
-  }, []);
+  }, [isZoomed]);
+
+  // Load HLS.js script dynamically
+  const loadHlsScript = (): Promise<any> => {
+    return new Promise((resolve, reject) => {
+      if ((window as any).Hls) {
+        resolve((window as any).Hls);
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = "https://cdn.jsdelivr.net/npm/hls.js@1.5.15/dist/hls.min.js";
+      script.onload = () => resolve((window as any).Hls);
+      script.onerror = () => reject(new Error("Failed to load hls.js"));
+      document.head.appendChild(script);
+    });
+  };
 
   useEffect(() => {
     if (statut !== "active") {
@@ -93,6 +122,7 @@ const CameraPlayer: React.FC<CameraPlayerProps> = ({ cameraId, cameraNom, statut
 
     let active = true;
     let pc: RTCPeerConnection | null = null;
+    let hlsInstance: any = null;
     let timeoutId: number | null = null;
 
     const startStream = async () => {
@@ -100,90 +130,138 @@ const CameraPlayer: React.FC<CameraPlayerProps> = ({ cameraId, cameraNom, statut
         setStatus("connecting");
         setErrorMsg(null);
 
-        // 1. Fetch WHEP JWT Token from server API
-        const token = await generateStreamToken(cameraId);
-        if (!active) return;
-
-        // 2. Setup RTCPeerConnection
-        pc = new RTCPeerConnection({
-          iceServers: [] // Local MediaMTX works fine without stun
-        });
-        pcRef.current = pc;
-
-        // 3. Add video and audio transceivers (recvonly)
-        pc.addTransceiver("video", { direction: "recvonly" });
-        try {
-          pc.addTransceiver("audio", { direction: "recvonly" });
-        } catch (_) {}
-
-        // 4. Handle track connection
-        pc.ontrack = (event) => {
+        if (isZoomed) {
+          // Play High-Resolution stream via HLS
+          const token = await generateStreamToken(cameraId);
           if (!active) return;
-          console.log(`WebRTC WHEP track received for ${cameraNom}:`, event.track.kind);
-          if (videoRef.current && event.streams && event.streams[0]) {
-            videoRef.current.srcObject = event.streams[0];
-            setStatus("playing");
-          }
-        };
 
-        // 5. Track state changes
-        pc.onconnectionstatechange = () => {
+          const hlsUrl = `http://localhost:8888/${cameraId}/index.m3u8?token=${token}`;
+          const Hls = await loadHlsScript();
           if (!active) return;
-          const state = pc?.connectionState;
-          console.log(`WebRTC Connection State for ${cameraNom}:`, state);
-          if (state === "connected") {
-            setStatus("playing");
-            if (timeoutId) {
-              clearTimeout(timeoutId);
-              timeoutId = null;
+
+          if (videoRef.current) {
+            if (Hls.isSupported()) {
+              const hls = new Hls({
+                enableWorker: true,
+                lowLatencyMode: true,
+              });
+              hlsInstance = hls;
+              hls.loadSource(hlsUrl);
+              hls.attachMedia(videoRef.current);
+              hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                if (active) setStatus("playing");
+              });
+              hls.on(Hls.Events.ERROR, (_: any, data: any) => {
+                if (!active) return;
+                console.error("hls.js error:", data);
+                if (data.fatal) {
+                  switch (data.type) {
+                    case Hls.ErrorTypes.NETWORK_ERROR:
+                      hls.startLoad();
+                      break;
+                    case Hls.ErrorTypes.MEDIA_ERROR:
+                      hls.recoverMediaError();
+                      break;
+                    default:
+                      setStatus("error");
+                      setErrorMsg(`HLS Error: ${data.details}`);
+                      break;
+                  }
+                }
+              });
+            } else if (videoRef.current.canPlayType("application/vnd.apple.mpegurl")) {
+              // Safari native support
+              videoRef.current.src = hlsUrl;
+              videoRef.current.addEventListener("loadedmetadata", () => {
+                if (active) setStatus("playing");
+              });
+              videoRef.current.addEventListener("error", () => {
+                if (active) {
+                  setStatus("error");
+                  setErrorMsg("Native HLS Playback Error");
+                }
+              });
+            } else {
+              setStatus("error");
+              setErrorMsg("HLS playback is not supported by this browser");
             }
-          } else if (state === "failed" || state === "disconnected") {
-            setStatus("no-signal");
-            setErrorMsg("WebRTC Connection Lost / Failed");
           }
-        };
+        } else {
+          // Play Low-Resolution stream via WebRTC WHEP
+          const whepUrl = await configureWHEPStream(cameraId);
+          if (!active) return;
 
-        // 6. Create SDP Offer
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
+          pc = new RTCPeerConnection({
+            iceServers: [] // Local MediaMTX works fine without stun
+          });
+          pcRef.current = pc;
 
-        // 7. Post SDP Offer to WHEP endpoint on MediaMTX (port 8889)
-        const whepUrl = `http://localhost:8889/${cameraId}/whep?token=${token}`;
-        const response = await window.fetch(whepUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/sdp",
-          },
-          body: offer.sdp,
-        });
+          pc.addTransceiver("video", { direction: "recvonly" });
+          try {
+            pc.addTransceiver("audio", { direction: "recvonly" });
+          } catch (_) {}
 
-        if (!response.ok) {
-          throw new Error(`MediaMTX WHEP handshake failed: status ${response.status}`);
+          pc.ontrack = (event) => {
+            if (!active) return;
+            console.log(`WebRTC WHEP track received for ${cameraNom}:`, event.track.kind);
+            if (videoRef.current && event.streams && event.streams[0]) {
+              videoRef.current.srcObject = event.streams[0];
+              setStatus("playing");
+            }
+          };
+
+          pc.onconnectionstatechange = () => {
+            if (!active) return;
+            const state = pc?.connectionState;
+            console.log(`WebRTC Connection State for ${cameraNom}:`, state);
+            if (state === "connected") {
+              setStatus("playing");
+              if (timeoutId) {
+                clearTimeout(timeoutId);
+                timeoutId = null;
+              }
+            } else if (state === "failed" || state === "disconnected") {
+              setStatus("no-signal");
+              setErrorMsg("WebRTC Connection Lost / Failed");
+            }
+          };
+
+          const offer = await pc.createOffer();
+          await pc.setLocalDescription(offer);
+
+          const response = await window.fetch(whepUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/sdp",
+            },
+            body: offer.sdp,
+          });
+
+          if (!response.ok) {
+            throw new Error(`MediaMTX WHEP handshake failed: status ${response.status}`);
+          }
+
+          const answerSdp = await response.text();
+          if (!active) return;
+
+          await pc.setRemoteDescription(new RTCSessionDescription({
+            type: "answer",
+            sdp: answerSdp,
+          }));
+
+          timeoutId = window.setTimeout(() => {
+            if (active && status !== "playing") {
+              setStatus("no-signal");
+              setErrorMsg("WebRTC Connection Timeout");
+              cleanup();
+            }
+          }, 8000);
         }
-
-        const answerSdp = await response.text();
-        if (!active) return;
-
-        // 8. Apply Answer
-        await pc.setRemoteDescription(new RTCSessionDescription({
-          type: "answer",
-          sdp: answerSdp,
-        }));
-
-        // Connection Timeout (8s)
-        timeoutId = window.setTimeout(() => {
-          if (active && status !== "playing") {
-            setStatus("no-signal");
-            setErrorMsg("WebRTC Connection Timeout");
-            cleanup();
-          }
-        }, 8000);
-
       } catch (err: any) {
-        console.error(`WebRTC WHEP playback failed for ${cameraNom}:`, err);
+        console.error(`Playback failed for ${cameraNom}:`, err);
         if (active) {
           setStatus("error");
-          setErrorMsg(err.message || "Failed to establish WebRTC handshake");
+          setErrorMsg(err.message || "Failed to establish stream connection");
         }
       }
     };
@@ -197,8 +275,13 @@ const CameraPlayer: React.FC<CameraPlayerProps> = ({ cameraId, cameraNom, statut
         pc.onconnectionstatechange = null;
         pc.close();
       }
+      if (hlsInstance) {
+        hlsInstance.destroy();
+      }
       if (videoRef.current) {
         videoRef.current.srcObject = null;
+        videoRef.current.removeAttribute("src");
+        videoRef.current.load();
       }
       pcRef.current = null;
     };
@@ -209,17 +292,23 @@ const CameraPlayer: React.FC<CameraPlayerProps> = ({ cameraId, cameraNom, statut
       active = false;
       cleanup();
     };
-  }, [cameraId, statut, retryTrigger]);
+  }, [cameraId, statut, retryTrigger, isZoomed]);
 
   const handleRetry = () => {
     setRetryTrigger(prev => prev + 1);
   };
 
   return (
-    <div className="relative w-full h-full bg-control-panel flex flex-col border border-control-border brackets overflow-hidden group">
+    <div 
+      onDoubleClick={onDoubleClick}
+      className="relative w-full h-full bg-control-panel flex flex-col border border-control-border brackets overflow-hidden group select-none cursor-pointer"
+    >
       
       {/* Top overlay panel */}
-      <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-control-bg/90 to-transparent p-2 flex items-center justify-between text-[9px] font-mono select-none">
+      <div 
+        onDoubleClick={(e) => e.stopPropagation()}
+        className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-control-bg/90 to-transparent p-2 flex items-center justify-between text-[9px] font-mono select-none"
+      >
         <div className="flex items-center gap-1.5">
           <span className={`h-1.5 w-1.5 rounded-full ${
             status === "playing" ? "bg-control-green animate-pulse" :
@@ -233,7 +322,7 @@ const CameraPlayer: React.FC<CameraPlayerProps> = ({ cameraId, cameraNom, statut
         {/* Stream Actions */}
         <div className="flex items-center gap-2">
           {status === "playing" && (
-            <div className="hidden sm:flex items-center gap-3 text-control-cyan/70">
+            <div className="hidden sm:flex items-center gap-3 text-control-cyan/70 font-mono">
               <span>{metrics.fps} FPS</span>
               <span>{metrics.bitrate} KB/S</span>
               <span>{metrics.latency}MS</span>
@@ -250,7 +339,10 @@ const CameraPlayer: React.FC<CameraPlayerProps> = ({ cameraId, cameraNom, statut
 
       {/* Settings Panel Overlay */}
       {showConfig && (
-        <div className="absolute inset-0 bg-control-bg/95 z-20 flex flex-col items-center justify-center p-4 text-center font-mono">
+        <div 
+          onDoubleClick={(e) => e.stopPropagation()}
+          className="absolute inset-0 bg-control-bg/95 z-20 flex flex-col items-center justify-center p-4 text-center font-mono"
+        >
           <p className="text-xs text-control-text-bright font-bold uppercase tracking-widest mb-3">Camera Actions</p>
           <div className="flex flex-col gap-2 w-full max-w-[160px]">
             <button
@@ -294,10 +386,22 @@ const CameraPlayer: React.FC<CameraPlayerProps> = ({ cameraId, cameraNom, statut
               muted
               className="w-full h-full object-cover"
             />
-            {/* Blinking REC tag */}
-            <div className="absolute top-8 right-2 bg-control-red/15 border border-control-red text-control-red text-[8px] font-mono font-bold px-1.5 py-0.5 animate-pulse flex items-center gap-1">
-              <span className="h-1 w-1 bg-control-red rounded-full animate-ping" />
-              <span>LIVE</span>
+            {/* Stream Type & REC tags */}
+            <div 
+              onDoubleClick={(e) => e.stopPropagation()}
+              className="absolute top-8 right-2 flex gap-1.5 z-10 select-none"
+            >
+              <div className={`border text-[8px] font-mono font-bold px-1.5 py-0.5 flex items-center gap-1 ${
+                isZoomed 
+                  ? "bg-control-cyan/15 border-control-cyan text-control-cyan" 
+                  : "bg-control-amber/15 border-control-amber text-control-amber"
+              }`}>
+                <span>{isZoomed ? "HIGH-RES HLS" : "LOW-RES WHEP"}</span>
+              </div>
+              <div className="bg-control-red/15 border border-control-red text-control-red text-[8px] font-mono font-bold px-1.5 py-0.5 animate-pulse flex items-center gap-1">
+                <span className="h-1 w-1 bg-control-red rounded-full animate-ping" />
+                <span>LIVE</span>
+              </div>
             </div>
             
             {/* CRT Grid scanlines effect */}
@@ -307,7 +411,7 @@ const CameraPlayer: React.FC<CameraPlayerProps> = ({ cameraId, cameraNom, statut
           <div className="flex flex-col items-center justify-center gap-3 p-4 select-none">
             <div className="h-6 w-6 border-2 border-control-cyan border-t-transparent rounded-full animate-spin" />
             <div className="text-[10px] text-control-cyan uppercase tracking-widest font-mono font-semibold animate-pulse text-center">
-              Negotiating WHEP Feed...
+              {isZoomed ? "Negotiating HLS Feed..." : "Negotiating WHEP Feed..."}
             </div>
           </div>
         ) : (
@@ -335,7 +439,7 @@ const CameraPlayer: React.FC<CameraPlayerProps> = ({ cameraId, cameraNom, statut
         )}
       </div>
     </div>
-  );
+  );;
 };
 
 // ==========================================
@@ -351,6 +455,9 @@ export const LiveView: React.FC = () => {
   
   // Track which slot is currently opening its camera selection picker
   const [activePickerSlot, setActivePickerSlot] = useState<number | null>(null);
+
+  // Track the zoomed slot index for high-res stream view
+  const [zoomedSlotIndex, setZoomedSlotIndex] = useState<number | null>(null);
 
   useEffect(() => {
     fetchCameras();
@@ -459,6 +566,7 @@ export const LiveView: React.FC = () => {
               onClick={() => {
                 setLayoutSize(size);
                 setActivePickerSlot(null);
+                setZoomedSlotIndex(null);
               }}
               className={`px-3 py-1 text-[10px] uppercase font-bold tracking-wider transition-all cursor-pointer border flex items-center gap-1.5 ${
                 layoutSize === size
@@ -498,29 +606,56 @@ export const LiveView: React.FC = () => {
           </button>
         </div>
       ) : (
-        <div className={`flex-1 min-h-0 grid ${getGridColsClass()} gap-3`}>
-          {Array.from({ length: layoutSize }).map((_, idx) => {
-            const assignedCamId = slotAssignments[idx];
+        <div className="flex-1 min-h-0 relative flex flex-col">
+          {zoomedSlotIndex !== null ? (() => {
+            const assignedCamId = slotAssignments[zoomedSlotIndex];
             const camera = cameras.find((c) => c.id === assignedCamId);
-
             if (assignedCamId && camera) {
               return (
-                <CameraPlayer
-                  key={`${idx}-${assignedCamId}`}
-                  cameraId={assignedCamId}
-                  cameraNom={camera.nom}
-                  statut={camera.statut}
-                  onClear={() => handleClearSlot(idx)}
-                />
+                <div className="flex-1 min-h-0 grid grid-cols-1">
+                  <CameraPlayer
+                    key={`zoomed-${zoomedSlotIndex}-${assignedCamId}`}
+                    cameraId={assignedCamId}
+                    cameraNom={camera.nom}
+                    statut={camera.statut}
+                    isZoomed={true}
+                    onClear={() => {
+                      handleClearSlot(zoomedSlotIndex);
+                      setZoomedSlotIndex(null);
+                    }}
+                    onDoubleClick={() => setZoomedSlotIndex(null)}
+                  />
+                </div>
               );
             }
+            setZoomedSlotIndex(null);
+            return null;
+          })() : (
+            <div className={`flex-1 min-h-0 grid ${getGridColsClass()} gap-3`}>
+              {Array.from({ length: layoutSize }).map((_, idx) => {
+                const assignedCamId = slotAssignments[idx];
+                const camera = cameras.find((c) => c.id === assignedCamId);
 
-            // Empty slot state
-            return (
-              <div 
-                key={`empty-${idx}`}
-                className="relative w-full h-full bg-control-panel/40 border border-dashed border-control-border hover:border-control-cyan/40 transition-all flex flex-col items-center justify-center p-4 text-center select-none font-mono"
-              >
+                if (assignedCamId && camera) {
+                  return (
+                    <CameraPlayer
+                      key={`${idx}-${assignedCamId}`}
+                      cameraId={assignedCamId}
+                      cameraNom={camera.nom}
+                      statut={camera.statut}
+                      isZoomed={false}
+                      onClear={() => handleClearSlot(idx)}
+                      onDoubleClick={() => setZoomedSlotIndex(idx)}
+                    />
+                  );
+                }
+
+                // Empty slot state
+                return (
+                  <div 
+                    key={`empty-${idx}`}
+                    className="relative w-full h-full bg-control-panel/40 border border-dashed border-control-border hover:border-control-cyan/40 transition-all flex flex-col items-center justify-center p-4 text-center select-none font-mono"
+                  >
                 {activePickerSlot === idx ? (
                   /* Camera Selector Overlay inside the slot */
                   <div className="absolute inset-0 bg-control-bg/95 z-10 flex flex-col p-3 text-left overflow-y-auto">
@@ -597,5 +732,7 @@ export const LiveView: React.FC = () => {
         </div>
       )}
     </div>
+  )}
+</div>
   );
 };

@@ -6,6 +6,8 @@ export interface Camera {
   id: string;
   nom: string;
   url_rtsp: string;
+  main_stream_url: string;
+  sub_stream_url: string;
   site_id?: string;
   statut: "active" | "inactive";
   created_at: string;
@@ -17,6 +19,7 @@ interface CameraState {
   error: string | null;
   fetchCameras: () => Promise<void>;
   generateStreamToken: (cameraId: string) => Promise<string>;
+  configureWHEPStream: (cameraId: string) => Promise<string>;
 }
 
 const API_BASE = "http://localhost:8080";
@@ -63,5 +66,22 @@ export const useCameraStore = create<CameraState>((set) => ({
 
     const data = await response.json();
     return data.token;
+  },
+
+  configureWHEPStream: async (cameraId: string) => {
+    const token = useAuthStore.getState().token;
+    const response = await fetch(`${API_BASE}/cameras/${cameraId}/whep`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to configure WHEP stream");
+    }
+
+    const data = await response.json();
+    return data.whep_url;
   },
 }));
