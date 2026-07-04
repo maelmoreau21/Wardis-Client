@@ -4,6 +4,16 @@ import { Login } from "./components/Login";
 import { Dashboard } from "./components/Dashboard";
 import { DetachedCameraPlayer } from "./components/DetachedCameraPlayer";
 
+// Task Views for general window detachment
+import { LiveView } from "./components/LiveView";
+import { AccessControl } from "./components/AccessControl";
+import { Alarms } from "./components/Alarms";
+import { Events } from "./components/Events";
+import { InteractiveMap } from "./components/InteractiveMap";
+import { UserSettings } from "./components/UserSettings";
+import { UserManagement } from "./components/UserManagement";
+import { CameraConfig } from "./components/CameraConfig";
+
 const App: React.FC = () => {
   const { isAuthenticated, initialize } = useAuthStore();
   const [theme, setTheme] = useState<"dark" | "light">(() => {
@@ -13,6 +23,7 @@ const App: React.FC = () => {
 
   const queryParams = new URLSearchParams(window.location.search);
   const isDetached = queryParams.get("detached") === "true";
+  const tabType = queryParams.get("tabType");
   const cameraId = queryParams.get("cameraId");
   const token = queryParams.get("token");
   const nom = queryParams.get("nom");
@@ -37,6 +48,7 @@ const App: React.FC = () => {
     }
   }, [initialize, isDetached, token]);
 
+  // Handle detached camera player (individual stream monitor)
   if (isDetached && cameraId && nom && statut) {
     return (
       <DetachedCameraPlayer
@@ -44,6 +56,22 @@ const App: React.FC = () => {
         cameraNom={nom}
         statut={statut}
       />
+    );
+  }
+
+  // Handle general detached task workspace views (monitoring panel, alarms center, maps etc.)
+  if (isDetached && tabType) {
+    return (
+      <div className={`h-screen w-screen bg-control-bg p-6 overflow-auto ${theme === "dark" ? "theme-dark" : "theme-light"}`}>
+        {tabType === "live" && <LiveView />}
+        {tabType === "access" && <AccessControl />}
+        {tabType === "alarms" && <Alarms />}
+        {tabType === "events" && <Events />}
+        {tabType === "map" && <InteractiveMap />}
+        {tabType === "camera-config" && <CameraConfig />}
+        {tabType === "users" && <UserManagement />}
+        {tabType === "settings" && <UserSettings theme={theme} onToggleTheme={() => setTheme(theme === "dark" ? "light" : "dark")} />}
+      </div>
     );
   }
 

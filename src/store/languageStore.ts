@@ -93,6 +93,8 @@ export const translations = {
     taskMap: "Carte interactive",
     taskUsers: "Droits & Utilisateurs",
     taskSettings: "Mon Profil",
+    taskDiagnostics: "Diagnostics Système",
+    taskCameraConfig: "Configuration Caméras",
 
     // User Settings / Operator Profile
     userSettingsTitle: "Paramètres de l'opérateur",
@@ -225,6 +227,8 @@ export const translations = {
     taskMap: "Interactive Map",
     taskUsers: "Users & Rights",
     taskSettings: "My Profile",
+    taskDiagnostics: "System Diagnostics",
+    taskCameraConfig: "Camera Configuration",
 
     // User Settings / Operator Profile
     userSettingsTitle: "Operator Settings",

@@ -9,7 +9,7 @@ import { useWorkspaceStore, type TabType } from "../store/workspaceStore";
 // Lucide icons
 import { 
   LogOut, Radio, Terminal, Cpu, Clock, LayoutGrid, ShieldAlert, Map, 
-  Camera, DoorOpen, Sparkles, Moon, Sun, Globe, Users, Plus, X, Settings 
+  Camera, DoorOpen, Sparkles, Moon, Sun, Globe, Users, Plus, X, Settings, Video
 } from "lucide-react";
 
 // Workspace Tab Views
@@ -20,6 +20,8 @@ import { Events } from "./Events";
 import { InteractiveMap } from "./InteractiveMap";
 import { UserSettings } from "./UserSettings";
 import { UserManagement } from "./UserManagement";
+import { CameraConfig } from "./CameraConfig";
+import { HomePortal } from "./HomePortal";
 
 interface DashboardProps {
   theme: "dark" | "light";
@@ -95,14 +97,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
       { key: "live", type: "live" as TabType, labelKey: "taskLive" as TranslationKey, icon: Camera, closable: true },
       { key: "access", type: "access" as TabType, labelKey: "taskAccess" as TranslationKey, icon: DoorOpen, closable: true },
       { key: "alarms", type: "alarms" as TabType, labelKey: "taskAlarms" as TranslationKey, icon: ShieldAlert, closable: true },
-      { key: "events", type: "events" as TabType, labelKey: "taskEvents" as TranslationKey, icon: Radio, closable: true },
-      { key: "map", type: "map" as TabType, labelKey: "taskMap" as TranslationKey, icon: Map, closable: true }
+      { key: "map", type: "map" as TabType, labelKey: "taskMap" as TranslationKey, icon: Map, closable: true },
+      { key: "events", type: "events" as TabType, labelKey: "taskEvents" as TranslationKey, icon: Radio, closable: true }
     ];
 
     if (user?.role === "admin") {
+      base.push({ key: "camera-config", type: "camera-config" as TabType, labelKey: "taskCameraConfig" as any, icon: Video, closable: true });
       base.push({ key: "users", type: "users" as TabType, labelKey: "taskUsers" as TranslationKey, icon: Users, closable: true });
     }
 
+    base.push({ key: "diagnostics", type: "diagnostics" as TabType, labelKey: "taskDiagnostics" as any, icon: Cpu, closable: true });
     base.push({ key: "settings", type: "settings" as TabType, labelKey: "taskSettings" as TranslationKey, icon: Settings, closable: true });
 
     return base;
@@ -122,6 +126,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
       case "map": return Map;
       case "users": return Users;
       case "settings": return Settings;
+      case "camera-config": return Video;
+      case "diagnostics": return Cpu;
     }
   };
 
@@ -332,7 +338,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
 
         {/* Tab Content */}
         <div className="flex-1 overflow-y-auto p-6 flex flex-col min-h-0">
-          {activeTab?.type === "status" && (
+          {activeTab?.type === "status" && <HomePortal />}
+
+          {activeTab?.type === "live" && <LiveView />}
+          {activeTab?.type === "access" && <AccessControl />}
+          {activeTab?.type === "alarms" && <Alarms />}
+          {activeTab?.type === "events" && <Events />}
+          {activeTab?.type === "map" && <InteractiveMap />}
+          {activeTab?.type === "camera-config" && <CameraConfig />}
+          {activeTab?.type === "users" && <UserManagement />}
+          {activeTab?.type === "settings" && <UserSettings theme={theme} onToggleTheme={onToggleTheme} />}
+          
+          {activeTab?.type === "diagnostics" && (
             <div className="flex flex-col gap-6">
               <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {/* Stats Card 1 */}
@@ -402,14 +419,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
               </section>
             </div>
           )}
-
-          {activeTab?.type === "live" && <LiveView />}
-          {activeTab?.type === "access" && <AccessControl />}
-          {activeTab?.type === "alarms" && <Alarms />}
-          {activeTab?.type === "events" && <Events />}
-          {activeTab?.type === "map" && <InteractiveMap />}
-          {activeTab?.type === "settings" && <UserSettings theme={theme} onToggleTheme={onToggleTheme} />}
-          {activeTab?.type === "users" && <UserManagement />}
         </div>
         
         {/* Simple footer with status log bar */}

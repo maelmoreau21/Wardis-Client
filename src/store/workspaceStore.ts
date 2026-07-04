@@ -8,7 +8,9 @@ export type TabType =
   | "events" 
   | "map" 
   | "users" 
-  | "settings";
+  | "settings"
+  | "camera-config"
+  | "diagnostics";
 
 export interface WorkspaceTab {
   id: string;
