@@ -13,22 +13,8 @@ export const Login: React.FC<LoginProps> = ({ theme, onToggleTheme }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [logs, setLogs] = useState<string[]>([]);
 
   useEffect(() => {
-    const diagnosticSteps = [
-      "Connexion au serveur Wardis prête",
-      "Vérification de la plateforme en cours",
-      "Préparation des flux vidéo et accès",
-      "Prêt à ouvrir la supervision"
-    ];
-
-    diagnosticSteps.forEach((step, i) => {
-      setTimeout(() => {
-        setLogs((prev) => [...prev, `${new Date().toLocaleTimeString()} • ${step}`]);
-      }, (i + 1) * 250);
-    });
-
     return () => clearError();
   }, [clearError]);
 
@@ -36,15 +22,7 @@ export const Login: React.FC<LoginProps> = ({ theme, onToggleTheme }) => {
     e.preventDefault();
     if (!email || !password || !serverUrl) return;
 
-    setLogs((prev) => [...prev, `${new Date().toLocaleTimeString()} • Authentification demandée`, `${new Date().toLocaleTimeString()} • Connexion au serveur...`]);
-
-    const success = await login(serverUrl, email, password);
-
-    if (success) {
-      setLogs((prev) => [...prev, `${new Date().toLocaleTimeString()} • Session validée`, `${new Date().toLocaleTimeString()} • Ouverture du tableau de bord...`]);
-    } else {
-      setLogs((prev) => [...prev, `${new Date().toLocaleTimeString()} • Échec d'authentification`]);
-    }
+    await login(serverUrl, email, password);
   };
 
   return (
@@ -131,22 +109,6 @@ export const Login: React.FC<LoginProps> = ({ theme, onToggleTheme }) => {
               </div>
             </div>
 
-            {/* Terminal logs styled cleanly as status list */}
-            <div className="mt-6 rounded-xl border border-control-border bg-control-panel-light/30 p-4 font-mono text-[10px] text-control-text/90">
-              <div className="mb-2 border-b border-control-border/60 pb-2 text-[9px] font-semibold uppercase tracking-[0.2em] text-control-text-bright">
-                Statut de la Console
-              </div>
-              <div className="space-y-1.5 max-h-[110px] overflow-y-auto">
-                {logs.map((log, idx) => (
-                  <div key={idx} className="flex items-center gap-2">
-                    <span className="h-1 w-1 rounded-full bg-control-cyan" />
-                    <span>{log}</span>
-                  </div>
-                ))}
-                {loading && <div className="text-control-amber animate-pulse">Validation des accès...</div>}
-              </div>
-            </div>
-
             {error && (
               <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-control-red/20 bg-control-red/5 p-3.5 text-xs text-control-red font-semibold">
                 <ShieldAlert className="h-4 w-4 shrink-0" />
@@ -171,21 +133,21 @@ export const Login: React.FC<LoginProps> = ({ theme, onToggleTheme }) => {
 
               <div>
                 <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-control-cyan">
-                  Adresse e-mail
+                  Identifiant
                 </label>
                 <input
-                  type="email"
+                  type="text"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="operator@wardis.local"
+                  placeholder="admin ou operator"
                   className="wardis-input w-full px-3 py-2.5 text-sm outline-none transition focus:border-control-cyan"
                 />
               </div>
 
               <div>
                 <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-control-cyan">
-                  Code d’accès
+                  Mot de passe
                 </label>
                 <div className="relative">
                   <input
