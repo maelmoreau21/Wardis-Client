@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { fetch } from "@tauri-apps/plugin-http";
 import { useAuthStore } from "./authStore";
 import { getApiBase } from "./config";
+import { connectWebSocket, disconnectWebSocket } from "./websocketService";
 
 export interface Zone {
   id: string;
@@ -47,12 +48,22 @@ interface AlarmState {
   sseConnected: boolean;
   notification: AlarmNotification | null;
   muted: boolean;
+  requireAckReason: boolean;
+  escalationDelay: number; // in seconds
+  snoozedAlarms: { [alarmId: string]: number }; // map of alarmId -> unsnooze timestamp
+  setRequireAckReason: (req: boolean) => void;
+  setEscalationDelay: (delay: number) => void;
+  addSnoozedAlarm: (alarmId: string, durationMinutes: number) => void;
+  clearSnoozedAlarms: () => void;
   fetchZones: () => Promise<void>;
   fetchSensors: () => Promise<void>;
   fetchActiveAlarms: () => Promise<void>;
   armZone: (zoneId: string) => Promise<void>;
   disarmZone: (zoneId: string) => Promise<void>;
   triggerSensor: (sensorId: string) => Promise<void>;
+  acknowledgeAlarm: (alarmId: string, reason: string) => Promise<void>;
+  transferAlarm: (alarmId: string, recipient: string, reason: string) => Promise<void>;
+  snoozeAlarm: (alarmId: string, durationMinutes: number, reason: string) => Promise<void>;
   connectEventStream: (onNewAlarm?: (notif: AlarmNotification) => void) => void;
   disconnectEventStream: () => void;
   setNotification: (notif: AlarmNotification | null) => void;
@@ -62,48 +73,95 @@ interface AlarmState {
 
 const getApiUrl = () => getApiBase();
 
-let eventSource: EventSource | null = null;
-
 // Synthesis of high-tech siren using Web Audio API
-export const playAlarmSound = () => {
+export const playAlarmSound = (severity: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW" = "LOW") => {
   try {
     const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
     const osc1 = audioCtx.createOscillator();
     const osc2 = audioCtx.createOscillator();
     const gainNode = audioCtx.createGain();
 
-    osc1.type = "sawtooth";
-    osc2.type = "sine";
-
-    osc1.frequency.setValueAtTime(880, audioCtx.currentTime); // A5
-    osc2.frequency.setValueAtTime(440, audioCtx.currentTime); // A4
-
-    // LFO frequency sweep (siren effect)
-    const lfo = audioCtx.createOscillator();
-    const lfoGain = audioCtx.createGain();
-    lfo.frequency.setValueAtTime(4, audioCtx.currentTime); // 4 sweeps per second
-    lfoGain.gain.setValueAtTime(150, audioCtx.currentTime); // Modulate by +/- 150 Hz
-
-    lfo.connect(lfoGain);
-    lfoGain.connect(osc1.frequency);
-    lfoGain.connect(osc2.frequency);
-
     osc1.connect(gainNode);
     osc2.connect(gainNode);
     gainNode.connect(audioCtx.destination);
 
-    // Set moderate volume
-    gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
+    if (severity === "CRITICAL") {
+      osc1.type = "sawtooth";
+      osc2.type = "sawtooth";
+      osc1.frequency.setValueAtTime(1000, audioCtx.currentTime);
+      osc2.frequency.setValueAtTime(500, audioCtx.currentTime);
 
-    osc1.start();
-    osc2.start();
-    lfo.start();
+      const lfo = audioCtx.createOscillator();
+      const lfoGain = audioCtx.createGain();
+      lfo.frequency.setValueAtTime(6, audioCtx.currentTime); // 6 sweeps per second
+      lfoGain.gain.setValueAtTime(250, audioCtx.currentTime);
+      lfo.connect(lfoGain);
+      lfoGain.connect(osc1.frequency);
+      lfoGain.connect(osc2.frequency);
+      lfo.start();
 
-    // Expontential fade out after 2 seconds
-    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 2.0);
-    osc1.stop(audioCtx.currentTime + 2.1);
-    osc2.stop(audioCtx.currentTime + 2.1);
-    lfo.stop(audioCtx.currentTime + 2.1);
+      gainNode.gain.setValueAtTime(0.12, audioCtx.currentTime);
+      osc1.start();
+      osc2.start();
+
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.5);
+      osc1.stop(audioCtx.currentTime + 1.6);
+      osc2.stop(audioCtx.currentTime + 1.6);
+      lfo.stop(audioCtx.currentTime + 1.6);
+    } else if (severity === "HIGH") {
+      osc1.type = "sawtooth";
+      osc2.type = "sine";
+      osc1.frequency.setValueAtTime(880, audioCtx.currentTime); // A5
+      osc2.frequency.setValueAtTime(440, audioCtx.currentTime); // A4
+
+      const lfo = audioCtx.createOscillator();
+      const lfoGain = audioCtx.createGain();
+      lfo.frequency.setValueAtTime(3, audioCtx.currentTime); // 3 sweeps per second
+      lfoGain.gain.setValueAtTime(150, audioCtx.currentTime); // Modulate by +/- 150 Hz
+      lfo.connect(lfoGain);
+      lfoGain.connect(osc1.frequency);
+      lfoGain.connect(osc2.frequency);
+      lfo.start();
+
+      gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
+      osc1.start();
+      osc2.start();
+
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 2.0);
+      osc1.stop(audioCtx.currentTime + 2.1);
+      osc2.stop(audioCtx.currentTime + 2.1);
+      lfo.stop(audioCtx.currentTime + 2.1);
+    } else if (severity === "MEDIUM") {
+      osc1.type = "triangle";
+      osc2.type = "sine";
+      osc1.frequency.setValueAtTime(600, audioCtx.currentTime);
+      osc2.frequency.setValueAtTime(300, audioCtx.currentTime);
+
+      gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
+      osc1.start();
+      osc2.start();
+
+      gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
+      gainNode.gain.setValueAtTime(0.001, audioCtx.currentTime + 0.3);
+      gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime + 0.4);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.0);
+      
+      osc1.stop(audioCtx.currentTime + 1.1);
+      osc2.stop(audioCtx.currentTime + 1.1);
+    } else {
+      osc1.type = "sine";
+      osc2.type = "sine";
+      osc1.frequency.setValueAtTime(400, audioCtx.currentTime);
+      osc2.frequency.setValueAtTime(400, audioCtx.currentTime);
+
+      gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
+      osc1.start();
+      osc2.start();
+
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+      osc1.stop(audioCtx.currentTime + 0.5);
+      osc2.stop(audioCtx.currentTime + 0.5);
+    }
   } catch (e) {
     console.error("Web Audio API warning sound failed:", e);
   }
@@ -118,6 +176,25 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
   sseConnected: false,
   notification: null,
   muted: false,
+  requireAckReason: localStorage.getItem("wardis-require-ack-reason") === "true",
+  escalationDelay: parseInt(localStorage.getItem("wardis-escalation-delay") || "30"),
+  snoozedAlarms: {},
+
+  setRequireAckReason: (requireAckReason) => {
+    localStorage.setItem("wardis-require-ack-reason", String(requireAckReason));
+    set({ requireAckReason });
+  },
+  setEscalationDelay: (escalationDelay) => {
+    localStorage.setItem("wardis-escalation-delay", String(escalationDelay));
+    set({ escalationDelay });
+  },
+  addSnoozedAlarm: (alarmId, durationMinutes) => set((state) => ({
+    snoozedAlarms: {
+      ...state.snoozedAlarms,
+      [alarmId]: Date.now() + durationMinutes * 60000
+    }
+  })),
+  clearSnoozedAlarms: () => set({ snoozedAlarms: {} }),
 
   fetchZones: async () => {
     set({ loading: true, error: null });
@@ -292,79 +369,85 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
     }
   },
 
-  connectEventStream: (onNewAlarm) => {
+  acknowledgeAlarm: async (alarmId: string, reason: string) => {
+    set({ loading: true, error: null });
     const token = useAuthStore.getState().token;
-    if (!token) return;
-    if (eventSource) return;
-
-    const url = `${getApiUrl()}/events/stream?token=${encodeURIComponent(token)}`;
-    eventSource = new EventSource(url);
-    set({ sseConnected: true });
-
-    eventSource.onmessage = async (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        console.log("SSE alarmStore event received:", data);
-
-        // Fetch fresh state
-        await Promise.all([
-          get().fetchActiveAlarms(),
-          get().fetchSensors(),
-          get().fetchZones()
-        ]);
-
-        if (data.event_type === "alarm.triggered") {
-          const alarmPayload = data.details?.payload || {};
-          const zoneId = data.zone_id || alarmPayload.zone_id;
-          const sensorId = data.capteur_id || alarmPayload.capteur_id;
-
-          const zones = get().zones;
-          const sensors = get().sensors;
-
-          const zoneObj = zones.find(z => z.id === zoneId);
-          const sensorObj = sensors.find(s => s.id === sensorId);
-
-          const zoneName = zoneObj ? zoneObj.nom : `Zone ${zoneId?.substring(0, 8) || "Inconnue"}`;
-          const sensorName = sensorObj ? sensorObj.nom : `Capteur ${sensorId?.substring(0, 8) || "Inconnu"}`;
-          const sensorType = sensorObj ? sensorObj.type : "ouverture";
-
-          let severity: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW" = "LOW";
-          if (sensorType === "mouvement") severity = "HIGH";
-          else if (sensorType === "ouverture") severity = "MEDIUM";
-
-          const notif: AlarmNotification = {
-            id: data.id || alarmPayload.alarme_id || Math.random().toString(),
-            zoneName,
-            sensorName,
-            severity,
-            timestamp: new Date(data.timestamp || alarmPayload.timestamp || Date.now()).toLocaleTimeString()
-          };
-
-          set({ notification: notif });
-
-          if (!get().muted) {
-            playAlarmSound();
-          }
-
-          if (onNewAlarm) {
-            onNewAlarm(notif);
-          }
-        }
-      } catch (err) {
-        console.error("Failed to parse SSE event data", err);
+    try {
+      const response = await fetch(`${getApiUrl()}/alarmes/${alarmId}/acquit`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ reason })
+      });
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to acknowledge alarm");
       }
-    };
+      set({ loading: false });
+      await get().fetchActiveAlarms();
+    } catch (err: any) {
+      set({ error: err.message || "Failed to acknowledge alarm", loading: false });
+      throw err;
+    }
+  },
 
-    eventSource.onerror = (err) => {
-      console.error("SSE connection error", err);
-    };
+  transferAlarm: async (alarmId: string, recipient: string, reason: string) => {
+    set({ loading: true, error: null });
+    const token = useAuthStore.getState().token;
+    try {
+      const response = await fetch(`${getApiUrl()}/alarmes/${alarmId}/transfer`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ recipient, reason })
+      });
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to transfer alarm");
+      }
+      set({ loading: false });
+    } catch (err: any) {
+      set({ error: err.message || "Failed to transfer alarm", loading: false });
+      throw err;
+    }
+  },
+
+  snoozeAlarm: async (alarmId: string, durationMinutes: number, reason: string) => {
+    set({ loading: true, error: null });
+    const token = useAuthStore.getState().token;
+    try {
+      const response = await fetch(`${getApiUrl()}/alarmes/${alarmId}/delay`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ duration_minutes: durationMinutes, reason })
+      });
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to snooze alarm");
+      }
+      get().addSnoozedAlarm(alarmId, durationMinutes);
+      set({ loading: false });
+      await get().fetchActiveAlarms();
+    } catch (err: any) {
+      set({ error: err.message || "Failed to snooze alarm", loading: false });
+      throw err;
+    }
+  },
+
+  connectEventStream: () => {
+    connectWebSocket();
+    set({ sseConnected: true });
   },
 
   disconnectEventStream: () => {
-    if (eventSource) {
-      eventSource.close();
-      eventSource = null;
-    }
+    disconnectWebSocket();
     set({ sseConnected: false });
   },
 

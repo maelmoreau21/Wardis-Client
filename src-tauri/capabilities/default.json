@@ -19,6 +19,7 @@
     "core:window:allow-set-decorations",
     "core:window:allow-available-monitors",
     "core:window:allow-current-monitor",
+    "core:window:allow-request-user-attention",
     {
       "identifier": "http:default",
       "allow": [

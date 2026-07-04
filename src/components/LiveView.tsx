@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useCameraStore } from "../store/cameraStore";
 import { useAuthStore } from "../store/authStore";
 import { useAlarmStore } from "../store/alarmStore";
+import { useVideoWallStore } from "../store/videoWallStore";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { listen } from "@tauri-apps/api/event";
 import { registerSpawnedWindow, saveCurrentLayout } from "../store/layoutManager";
@@ -35,7 +36,7 @@ import {
 // ==========================================
 // 1. CameraPlayer Component (WHEP WebRTC & HLS)
 // ==========================================
-interface CameraPlayerProps {
+export interface CameraPlayerProps {
   cameraId: string;
   cameraNom: string;
   statut: string;
@@ -50,7 +51,7 @@ interface CameraPlayerProps {
   isPTZOpen?: boolean;
 }
 
-const CameraPlayer: React.FC<CameraPlayerProps> = ({ 
+export const CameraPlayer: React.FC<CameraPlayerProps> = ({ 
   cameraId, 
   cameraNom, 
   statut, 
@@ -800,10 +801,18 @@ export const LiveView: React.FC = () => {
   const { cameras, loading, error, fetchCameras } = useCameraStore();
   const { activeAlarms, sensors, fetchActiveAlarms, fetchSensors } = useAlarmStore();
   
-  // Layout and view state
-  const [layout, setLayout] = useState<LayoutType>("2x2");
-  const [slotAssignments, setSlotAssignments] = useState<(string | null)[]>(Array(16).fill(null));
-  const [aspectRatios, setAspectRatios] = useState<("contain" | "cover")[]>(Array(16).fill("cover"));
+  // Layout and view state from global store
+  const {
+    slotAssignments,
+    setSlotAssignments,
+    aspectRatios,
+    setAspectRatios,
+    layout: storeLayout,
+    setLayout: setStoreLayout
+  } = useVideoWallStore();
+
+  const layout = storeLayout as LayoutType;
+  const setLayout = (l: LayoutType) => setStoreLayout(l);
   
   // Custom Free Layout tiles
   const [freeTiles, setFreeTiles] = useState<{ id: string; cameraId: string | null; x: number; y: number; w: number; h: number }[]>([
@@ -913,11 +922,11 @@ export const LiveView: React.FC = () => {
         const nextIdx = (settings.currentIndex + 1) % settings.camerasList.length;
         
         // Update slot assignment
-        setSlotAssignments(prev => {
-          const next = [...prev];
+        {
+          const next = [...slotAssignments];
           next[slotIdx] = settings.camerasList[nextIdx];
-          return next;
-        });
+          setSlotAssignments(next);
+        }
 
         // Update sequence state
         setSequenceSettings(prev => ({
@@ -961,6 +970,10 @@ export const LiveView: React.FC = () => {
     const camera = cameras.find(c => c.id === cameraId);
     if (!camera) return false;
 
+    // Direct ID match
+    const hasDirectAlarm = activeAlarms.some(alarm => alarm.zone_id === (camera as any).zone_id);
+    if (hasDirectAlarm) return true;
+
     return activeAlarms.some(alarm => {
       const sensor = sensors.find(s => s.id === alarm.capteur_id);
       if (!sensor) return false;
@@ -1002,27 +1015,21 @@ export const LiveView: React.FC = () => {
   };
 
   const handleClearSlot = (idx: number) => {
-    setSlotAssignments(prev => {
-      const next = [...prev];
-      next[idx] = null;
-      return next;
-    });
+    const next = [...slotAssignments];
+    next[idx] = null;
+    setSlotAssignments(next);
   };
 
   const handleToggleAspectRatio = (idx: number) => {
-    setAspectRatios(prev => {
-      const next = [...prev];
-      next[idx] = next[idx] === "contain" ? "cover" : "contain";
-      return next;
-    });
+    const next = [...aspectRatios];
+    next[idx] = next[idx] === "contain" ? "cover" : "contain";
+    setAspectRatios(next);
   };
 
   const handleAssignCamera = (slotIndex: number, cameraId: string | null) => {
-    setSlotAssignments((prev) => {
-      const next = [...prev];
-      next[slotIndex] = cameraId;
-      return next;
-    });
+    const next = [...slotAssignments];
+    next[slotIndex] = cameraId;
+    setSlotAssignments(next);
     setActivePickerSlot(null);
   };
 
@@ -1050,11 +1057,9 @@ export const LiveView: React.FC = () => {
     const cameraId = e.dataTransfer.getData("wardis/camera-id") || e.dataTransfer.getData("text/plain");
     if (!cameraId) return;
 
-    setSlotAssignments(prev => {
-      const next = [...prev];
-      next[targetSlotIdx] = cameraId;
-      return next;
-    });
+    const next = [...slotAssignments];
+    next[targetSlotIdx] = cameraId;
+    setSlotAssignments(next);
   };
 
   // Drag & Drop: Drag starts from tile
@@ -1073,13 +1078,11 @@ export const LiveView: React.FC = () => {
       if (sourceSlotIdx === targetSlotIdx) return;
 
       // Swap camera assignments
-      setSlotAssignments(prev => {
-        const next = [...prev];
-        const temp = next[sourceSlotIdx];
-        next[sourceSlotIdx] = next[targetSlotIdx];
-        next[targetSlotIdx] = temp;
-        return next;
-      });
+      const next = [...slotAssignments];
+      const temp = next[sourceSlotIdx];
+      next[sourceSlotIdx] = next[targetSlotIdx];
+      next[targetSlotIdx] = temp;
+      setSlotAssignments(next);
     } else {
       // Tree drag to slot
       handleDropFromTree(e, targetSlotIdx);

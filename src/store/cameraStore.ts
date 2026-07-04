@@ -10,6 +10,7 @@ export interface Camera {
   main_stream_url: string;
   sub_stream_url: string;
   site_id?: string;
+  zone_id?: string;
   statut: "active" | "inactive";
   ptz_supported: boolean;
   created_at: string;
