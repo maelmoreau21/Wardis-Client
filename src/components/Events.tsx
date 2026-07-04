@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import { useEventStore } from "../store/eventStore";
 import { useCameraStore } from "../store/cameraStore";
 import { useAccessControlStore } from "../store/accessControlStore";
+import { useWorkspaceStore } from "../store/workspaceStore";
 import {
   Radio,
   RefreshCw,
@@ -18,7 +19,8 @@ import {
   ChevronDown,
   ChevronUp,
   SlidersHorizontal,
-  Building
+  Building,
+  Play
 } from "lucide-react";
 
 // Standard Site Name Mapping
@@ -46,6 +48,17 @@ export const Events: React.FC = () => {
 
   const { cameras, fetchCameras } = useCameraStore();
   const { doors, fetchDoors } = useAccessControlStore();
+  const { openTab } = useWorkspaceStore();
+
+  const getCameraForEvent = (event: any) => {
+    if (event.camera_id) {
+      return cameras.find(c => c.id === event.camera_id);
+    }
+    if (event.zone_id) {
+      return cameras.find(c => c.zone_id === event.zone_id);
+    }
+    return null;
+  };
 
   // Filters State
   const [selectedSiteId, setSelectedSiteId] = useState<string>("all");
@@ -372,10 +385,32 @@ export const Events: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Expand Chevron */}
-                      <div className="self-end sm:self-auto text-control-cyan flex items-center gap-1.5 text-[10px]">
-                        <span>DETAILS</span>
-                        {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                      {/* Jump to Timeline button & Expand Chevron */}
+                      <div className="self-end sm:self-auto flex items-center gap-3">
+                        {getCameraForEvent(event) && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const cam = getCameraForEvent(event);
+                              if (cam) {
+                                openTab("investigation", "Playback/Investigation", {
+                                  cameraId: cam.id,
+                                  timestamp: event.timestamp
+                                });
+                              }
+                            }}
+                            className="flex items-center gap-1 px-2.5 py-1 bg-control-cyan/15 hover:bg-control-cyan border border-control-cyan text-control-cyan hover:text-black rounded text-[10px] font-bold uppercase transition cursor-pointer"
+                            title={`Inspecter l'enregistrement de ${getCameraForEvent(event)?.nom}`}
+                          >
+                            <Play className="h-3 w-3 fill-current" />
+                            <span>VOIR VIDÉO</span>
+                          </button>
+                        )}
+                        
+                        <div className="text-control-cyan flex items-center gap-1.5 text-[10px] cursor-pointer">
+                          <span>DETAILS</span>
+                          {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        </div>
                       </div>
                     </div>
 

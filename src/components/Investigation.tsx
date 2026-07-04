@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useCameraStore } from "../store/cameraStore";
 import { useLanguageStore } from "../store/languageStore";
 import { useAuthStore } from "../store/authStore";
+import { useWorkspaceStore } from "../store/workspaceStore";
 import { 
   Play, Pause, SkipForward, SkipBack, FastForward, Rewind, 
   ChevronUp, ChevronDown, ChevronLeft, ChevronRight, 
@@ -38,6 +39,10 @@ export const Investigation: React.FC = () => {
   const { cameras, fetchCameras, loading } = useCameraStore();
   const { t } = useLanguageStore();
   const { user } = useAuthStore();
+  const { tabs, activeTabId } = useWorkspaceStore();
+
+  const activeTab = useMemo(() => tabs.find(t => t.id === activeTabId), [tabs, activeTabId]);
+  const params = activeTab?.params;
 
   // Active Layout and Camera Assignments
   const [layout, setLayout] = useState<LayoutType>("2x2");
@@ -108,6 +113,44 @@ export const Investigation: React.FC = () => {
   useEffect(() => {
     fetchCameras().catch(() => {});
   }, [fetchCameras]);
+
+  // Intercept workspace tab parameters to seek nearest camera to access event timestamp
+  useEffect(() => {
+    if (params?.cameraId && params?.timestamp) {
+      const targetCamId = params.cameraId;
+      const targetTimeStr = params.timestamp;
+
+      const dateObj = new Date(targetTimeStr);
+      if (!isNaN(dateObj.getTime())) {
+        // Convert to seconds from midnight local time
+        const secondsFromMidnight = dateObj.getHours() * 3600 + dateObj.getMinutes() * 60 + dateObj.getSeconds();
+
+        // 1. Find if already assigned
+        let slotIdx = slotAssignments.indexOf(targetCamId);
+        if (slotIdx === -1) {
+          slotIdx = selectedSlotIndex;
+          setSlotAssignments(prev => {
+            const next = [...prev];
+            next[slotIdx] = targetCamId;
+            return next;
+          });
+        }
+
+        // 2. Seek time
+        setSlotTimehead(prev => {
+          const next = [...prev];
+          next[slotIdx] = secondsFromMidnight;
+          return next;
+        });
+
+        // 3. Focus slot
+        setSelectedSlotIndex(slotIdx);
+
+        // 4. Pause simulation so operator can see frame
+        setIsPlaying(false);
+      }
+    }
+  }, [params]);
 
   // Pre-fill slots with active cameras initially
   useEffect(() => {
