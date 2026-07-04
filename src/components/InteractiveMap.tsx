@@ -264,6 +264,36 @@ export const InteractiveMap: React.FC = () => {
     };
   }, [activeDragId]);
 
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!containerRef.current) return;
+
+    const cameraId = e.dataTransfer.getData("wardis/camera-id");
+    const doorId = e.dataTransfer.getData("wardis/door-id");
+    const sensorId = e.dataTransfer.getData("wardis/sensor-id");
+    const entityType = e.dataTransfer.getData("wardis/entity-type") as "camera" | "door" | "sensor";
+
+    const id = cameraId || doorId || sensorId || e.dataTransfer.getData("text/plain");
+    const type = entityType || (cameraId ? "camera" : doorId ? "door" : sensorId ? "sensor" : "camera");
+
+    if (!id) return;
+
+    const rect = containerRef.current.getBoundingClientRect();
+    let x = ((e.clientX - rect.left) / rect.width) * 100;
+    let y = ((e.clientY - rect.top) / rect.height) * 100;
+
+    x = Math.max(0.5, Math.min(99.5, x));
+    y = Math.max(0.5, Math.min(99.5, y));
+
+    setEquipmentPositions((prev) => {
+      const updated = { ...prev, [id]: { x, y } };
+      localStorage.setItem("wardis_map_coordinates", JSON.stringify(updated));
+      return updated;
+    });
+
+    setSelectedItem({ id, type });
+  };
+
   // Reset positioning coordinates back to defaults
   const handleResetPositions = () => {
     if (window.confirm("Voulez-vous réinitialiser l'emplacement de tous les équipements ?")) {
@@ -424,6 +454,8 @@ export const InteractiveMap: React.FC = () => {
         <div 
           ref={containerRef}
           onMouseMove={handleMouseMove}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={handleDrop}
           className={`flex-1 relative bg-black border border-control-border overflow-hidden select-none min-h-[350px] ${
             isEditMode ? "cursor-crosshair" : "cursor-default"
           }`}

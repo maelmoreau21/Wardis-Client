@@ -30,6 +30,7 @@ import { IconRail } from "./layout/IconRail";
 import { ContextPanel } from "./layout/ContextPanel";
 import { MainCanvas } from "./layout/MainCanvas";
 import { StatusBar } from "./layout/StatusBar";
+import { SurveillanceTree } from "./layout/SurveillanceTree";
 
 interface DashboardProps {
   theme: "dark" | "light";
@@ -202,38 +203,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
 
         {/* Dynamic Context Panel */}
         {activeTab?.type === "live" && (
-          <ContextPanel title="Camera Directory" defaultWidth={220}>
-            <div className="flex flex-col gap-2">
-              <div className="text-[10px] text-control-text/60 uppercase tracking-widest font-bold">Sites & Sectors</div>
-              <div className="border border-control-border bg-control-panel-light/30 rounded p-2">
-                <div className="font-bold text-xs text-control-text-bright flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded bg-control-cyan shrink-0" />
-                  HQ Paris
-                </div>
-                <div className="pl-3 mt-1.5 space-y-1">
-                  {cameras.length === 0 ? (
-                    <div className="text-[10px] text-control-text/40 italic">No cameras.</div>
-                  ) : (
-                    cameras.map(cam => (
-                      <button 
-                        key={cam.id} 
-                        onClick={async () => {
-                          const { emit } = await import("@tauri-apps/api/event");
-                          await emit("camera-selected", { cameraId: cam.id });
-                        }}
-                        className="w-full flex items-center justify-between text-[10px] text-control-text hover:text-control-text-bright hover:bg-control-panel-light/30 px-1 py-0.5 rounded text-left transition cursor-pointer"
-                      >
-                        <span className="truncate flex items-center gap-1.5">
-                          <span className={`h-1.5 w-1.5 rounded-full ${cam.statut === "active" ? "bg-control-green" : "bg-control-red"}`} />
-                          {cam.nom}
-                        </span>
-                        <span className="text-[8px] text-control-text/40">{cam.ptz_supported ? "PTZ" : ""}</span>
-                      </button>
-                    ))
-                  )}
-                </div>
-              </div>
-            </div>
+          <ContextPanel title="Camera Directory" defaultWidth={230}>
+            <SurveillanceTree />
           </ContextPanel>
         )}
 
