@@ -8,9 +8,8 @@ import { useWorkspaceStore, type TabType } from "../store/workspaceStore";
 
 // Lucide icons
 import { 
-  LogOut, Radio, Terminal, Cpu, Clock, LayoutGrid, ShieldAlert, Map, 
-  Camera, DoorOpen, Sparkles, Moon, Sun, Globe, Users, Plus, X, Settings, Video,
-  ChevronLeft, ChevronRight, Menu
+  Radio, Terminal, Cpu, LayoutGrid, ShieldAlert, Map, 
+  Camera, DoorOpen, Users, Settings, Video
 } from "lucide-react";
 
 // Workspace Tab Views
@@ -24,6 +23,13 @@ import { UserManagement } from "./UserManagement";
 import { CameraConfig } from "./CameraConfig";
 import { HomePortal } from "./HomePortal";
 
+// Layout components
+import { TopBar } from "./layout/TopBar";
+import { IconRail } from "./layout/IconRail";
+import { ContextPanel } from "./layout/ContextPanel";
+import { MainCanvas } from "./layout/MainCanvas";
+import { StatusBar } from "./layout/StatusBar";
+
 interface DashboardProps {
   theme: "dark" | "light";
   onToggleTheme: () => void;
@@ -31,7 +37,7 @@ interface DashboardProps {
 
 export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) => {
   const { user, logout } = useAuthStore();
-  const { t, language, setLanguage } = useLanguageStore();
+  const { t } = useLanguageStore();
   const { cameras } = useCameraStore();
   const { doors, fetchDoors } = useAccessControlStore();
   const { connectEventStream, disconnectEventStream, activeAlarms } = useAlarmStore();
@@ -43,11 +49,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
   const [time, setTime] = useState(new Date());
   const [sysLogs, setSysLogs] = useState<{ time: string; key: TranslationKey; variables?: any }[]>([]);
   const [latency, setLatency] = useState(12);
-  const [showTabMenu, setShowTabMenu] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  
-  // Drag and Drop Tab Reordering State
-  const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
 
   useEffect(() => {
     connectEventStream();
@@ -95,7 +96,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
     alerts: activeAlarms.length
   }), [cameras, doors, activeAlarms]);
 
-  // Quick navigation link templates
+  // Sidebar link config
   const sidebarLinks = useMemo(() => {
     const base = [
       { key: "status", type: "status" as TabType, labelKey: "taskOverview" as TranslationKey, icon: LayoutGrid, closable: false },
@@ -112,7 +113,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
     }
 
     base.push({ key: "diagnostics", type: "diagnostics" as TabType, labelKey: "taskDiagnostics" as any, icon: Cpu, closable: true });
-    base.push({ key: "settings", type: "settings" as TabType, labelKey: "taskSettings" as TranslationKey, icon: Settings, closable: true });
 
     return base;
   }, [user]);
@@ -136,272 +136,141 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
     }
   };
 
-  const handleSidebarClick = (link: typeof sidebarLinks[0]) => {
+  const handleSidebarClick = (link: any) => {
     openTab(link.type, link.labelKey, undefined, link.closable);
   };
 
-  // Drag and drop tab reordering handlers
-  const handleDragStart = (e: React.DragEvent, index: number) => {
-    setDraggedIdx(index);
-    e.dataTransfer.effectAllowed = "move";
-  };
-
-  const handleDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault();
-    if (draggedIdx !== null && draggedIdx !== index) {
-      reorderTabs(draggedIdx, index);
-      setDraggedIdx(index);
+  // Generate telemetry for selected stream in status bar
+  const selectedTileTelemetry = useMemo(() => {
+    const activeCamera = cameras.find(c => c.statut === "active");
+    if (activeCamera) {
+      return {
+        cameraName: activeCamera.nom,
+        fps: 30,
+        resolution: "1920x1080",
+        zoom: 1.0
+      };
     }
-  };
-
-  const handleDragEnd = () => {
-    setDraggedIdx(null);
-  };
+    return undefined;
+  }, [cameras]);
 
   return (
-    <div className="flex h-screen w-screen bg-control-bg overflow-hidden text-control-text select-none">
+    <div className="flex flex-col h-screen w-screen bg-control-bg text-control-text select-none overflow-hidden font-sans">
       
-      {/* Sidebar navigation (with collapsible transition) */}
-      <aside className={`bg-control-panel border-r border-control-border flex flex-col justify-between shrink-0 transition-all duration-300 ${
-        sidebarCollapsed ? "w-16" : "w-64"
-      }`}>
-        <div className="flex flex-col gap-6 p-4">
-          {/* Logo, Brand, and Collapse Toggle */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 overflow-hidden">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-control-cyan text-white shadow-md shadow-control-cyan/20">
-                <Sparkles className="h-4 w-4" />
-              </div>
-              {!sidebarCollapsed && (
-                <div className="truncate">
-                  <div className="flex items-center gap-2">
-                    <span className="text-base font-bold text-control-text-bright tracking-tight">Wardis</span>
-                    <span className="rounded-full border border-control-cyan/20 bg-control-cyan/10 px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-[0.15em] text-control-cyan">
-                      v0.0.1
-                    </span>
-                  </div>
-                  <p className="text-[10px] text-control-text/75 uppercase tracking-wider font-semibold">{t("dashboardTitle")}</p>
+      {/* Top Header */}
+      <TopBar
+        title={t(activeTab?.title as TranslationKey)}
+        subtitle={t("headerSubtitle")}
+        serverTime={time.toLocaleTimeString()}
+        connectionStatus="online"
+        activeAlarmsCount={metrics.alerts}
+        userName={user?.email || "operator"}
+        userRole={user?.role || "OPERATOR"}
+        onLogout={logout}
+        onOpenSettings={() => openTab("settings", "taskSettings", undefined, true)}
+        t={t as any}
+      />
+
+      {/* Main Workspace layout */}
+      <div className="flex flex-1 min-h-0 overflow-hidden relative">
+        {/* Left Vertical IconRail */}
+        <IconRail
+          links={sidebarLinks}
+          activeType={activeTab?.type}
+          onLinkClick={handleSidebarClick}
+          t={t as any}
+        />
+
+        {/* Dynamic Context Panel */}
+        {activeTab?.type === "live" && (
+          <ContextPanel title="Camera Directory" defaultWidth={220}>
+            <div className="flex flex-col gap-2">
+              <div className="text-[10px] text-control-text/60 uppercase tracking-widest font-bold">Sites & Sectors</div>
+              <div className="border border-control-border bg-control-panel-light/30 rounded p-2">
+                <div className="font-bold text-xs text-control-text-bright flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded bg-control-cyan shrink-0" />
+                  HQ Paris
                 </div>
-              )}
-            </div>
-            
-            {/* Sidebar toggle button */}
-            <button
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="p-1 rounded hover:bg-control-panel-light text-control-text/80 hover:text-control-text-bright transition cursor-pointer"
-            >
-              {sidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-            </button>
-          </div>
-
-          {/* Navigation Links */}
-          <nav className="flex flex-col gap-1 mt-4">
-            {sidebarLinks.map((link) => {
-              const Icon = link.icon;
-              const isActive = activeTab?.type === link.type;
-              return (
-                <button
-                  key={link.key}
-                  onClick={() => handleSidebarClick(link)}
-                  className={`flex items-center rounded-lg px-3 py-2.5 text-xs font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
-                    isActive
-                      ? "bg-control-cyan text-white shadow-sm shadow-control-cyan/20"
-                      : "text-control-text hover:bg-control-panel-light hover:text-control-text-bright"
-                  } ${sidebarCollapsed ? "justify-center gap-0" : "gap-3"}`}
-                  title={sidebarCollapsed ? t(link.labelKey) : undefined}
-                >
-                  <Icon className="h-4.5 w-4.5 shrink-0" />
-                  {!sidebarCollapsed && <span className="truncate">{t(link.labelKey)}</span>}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
-
-        {/* Bottom Sidebar Panel */}
-        <div className="p-4 border-t border-control-border flex flex-col gap-4">
-          {/* User Profile */}
-          <div 
-            onClick={() => openTab("settings", "taskSettings", undefined, true)}
-            className={`flex items-center bg-control-panel-light/40 border border-control-border/60 hover:bg-control-panel-light/70 rounded-xl p-3 cursor-pointer transition ${
-              sidebarCollapsed ? "justify-center" : "gap-3"
-            }`}
-          >
-            <div className="h-8 w-8 shrink-0 rounded-full bg-control-cyan/15 flex items-center justify-center font-bold text-control-cyan text-xs">
-              {(user?.email || "OP").substring(0, 2).toUpperCase()}
-            </div>
-            {!sidebarCollapsed && (
-              <div className="min-w-0">
-                <p className="text-xs font-bold text-control-text-bright truncate">{user?.email || "operator@wardis.com"}</p>
-                <span className="text-[9px] uppercase tracking-wider text-control-text font-bold bg-control-panel-light px-1.5 py-0.5 border border-control-border rounded-md">
-                  {user?.role || "ADMIN"}
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Language Selector, Theme Switcher & Logout */}
-          <div className="flex flex-col gap-2">
-            <button
-              type="button"
-              onClick={() => setLanguage(language === "fr" ? "en" : "fr")}
-              className={`w-full flex items-center justify-between rounded-lg border border-control-border bg-control-panel-light hover:bg-control-panel-light/80 px-3 py-2 text-xs font-bold uppercase tracking-wider text-control-text cursor-pointer transition ${
-                sidebarCollapsed ? "justify-center" : ""
-              }`}
-              title={t("languageLabel")}
-            >
-              <span className="flex items-center gap-2">
-                <Globe className="h-4 w-4 text-control-cyan" />
-                {!sidebarCollapsed && <span>{language === "fr" ? "Langue: FR" : "Language: EN"}</span>}
-              </span>
-              {!sidebarCollapsed && <span className="text-[10px] text-control-text/60 font-semibold uppercase">{language}</span>}
-            </button>
-            <button
-              type="button"
-              onClick={onToggleTheme}
-              className={`w-full flex items-center justify-between rounded-lg border border-control-border bg-control-panel-light hover:bg-control-panel-light/80 px-3 py-2 text-xs font-bold uppercase tracking-wider text-control-text cursor-pointer transition ${
-                sidebarCollapsed ? "justify-center" : ""
-              }`}
-              title={theme === "dark" ? t("themeToggleLightLabel") : t("themeToggleDarkLabel")}
-            >
-              <span className="flex items-center gap-2">
-                {theme === "dark" ? <Sun className="h-4 w-4 text-control-amber" /> : <Moon className="h-4 w-4 text-control-cyan" />}
-                {!sidebarCollapsed && <span>{theme === "dark" ? t("themeToggleLightLabel") : t("themeToggleDarkLabel")}</span>}
-              </span>
-            </button>
-            <button
-              onClick={() => logout()}
-              className={`w-full flex items-center justify-center rounded-lg border border-control-red/20 bg-control-red/10 px-3 py-2 text-xs font-bold uppercase tracking-wider text-control-red transition hover:bg-control-red/15 cursor-pointer ${
-                sidebarCollapsed ? "" : "gap-2"
-              }`}
-              title={t("logoutButton")}
-            >
-              <LogOut className="h-4 w-4 shrink-0" />
-              {!sidebarCollapsed && <span>{t("logoutButton")}</span>}
-            </button>
-          </div>
-        </div>
-      </aside>
-
-      {/* Right Content Area */}
-      <main className="flex-1 flex flex-col overflow-hidden bg-control-bg">
-        
-        {/* Browser-like top tabs bar (with Drag and Drop) */}
-        <div className="flex items-center bg-control-panel border-b border-control-border px-4 py-1.5 gap-1 shrink-0 h-11 select-none overflow-x-auto relative z-20">
-          
-          {/* Quick sidebar trigger in header in case it is fully closed or for utility */}
-          {sidebarCollapsed && (
-            <button 
-              onClick={() => setSidebarCollapsed(false)}
-              className="mr-2 p-1.5 rounded bg-control-panel-light border border-control-border/60 text-control-text-bright hover:text-control-cyan transition cursor-pointer"
-            >
-              <Menu className="h-4 w-4" />
-            </button>
-          )}
-
-          <div className="flex items-center gap-1.5 flex-1 overflow-x-auto">
-            {tabs.map((tab, idx) => {
-              const TabIcon = getTabIcon(tab.type);
-              const isActive = tab.id === activeTabId;
-              return (
-                <div
-                  key={tab.id}
-                  onClick={() => setActiveTabId(tab.id)}
-                  draggable={true}
-                  onDragStart={(e) => handleDragStart(e, idx)}
-                  onDragOver={(e) => handleDragOver(e, idx)}
-                  onDragEnd={handleDragEnd}
-                  className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wider cursor-grab active:cursor-grabbing transition border duration-150 shrink-0 ${
-                    isActive
-                      ? "bg-control-cyan border-control-cyan text-white shadow-sm shadow-control-cyan/15"
-                      : "bg-control-panel-light border-control-border text-control-text hover:text-control-text-bright hover:bg-control-panel-light/80"
-                  }`}
-                >
-                  {TabIcon && <TabIcon className="h-3.5 w-3.5 shrink-0 pointer-events-none" />}
-                  <span className="pointer-events-none">{t(tab.title as TranslationKey)}</span>
-                  {tab.closable && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        closeTab(tab.id);
-                      }}
-                      className="hover:bg-black/20 rounded p-0.5 ml-1 transition cursor-pointer text-white/80 hover:text-white"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
+                <div className="pl-3 mt-1.5 space-y-1">
+                  {cameras.length === 0 ? (
+                    <div className="text-[10px] text-control-text/40 italic">No cameras.</div>
+                  ) : (
+                    cameras.map(cam => (
+                      <div key={cam.id} className="flex items-center justify-between text-[10px] hover:text-control-text-bright py-0.5">
+                        <span className="truncate flex items-center gap-1.5">
+                          <span className={`h-1.5 w-1.5 rounded-full ${cam.statut === "active" ? "bg-control-green" : "bg-control-red"}`} />
+                          {cam.nom}
+                        </span>
+                        <span className="text-[8px] text-control-text/40">{cam.ptz_supported ? "PTZ" : ""}</span>
+                      </div>
+                    ))
                   )}
                 </div>
-              );
-            })}
-
-            {/* "+" tab addition button */}
-            <div className="relative">
-              <button
-                onClick={() => setShowTabMenu(!showTabMenu)}
-                className="hover:bg-control-panel-light border border-control-border/60 rounded-lg p-1.5 text-control-text-bright cursor-pointer transition flex items-center justify-center bg-control-panel-light/40"
-              >
-                <Plus className="h-4 w-4" />
-              </button>
-
-              {/* Task launch dropdown */}
-              {showTabMenu && (
-                <>
-                  <div className="fixed inset-0 z-30" onClick={() => setShowTabMenu(false)} />
-                  <div className="absolute left-0 mt-2 w-56 rounded-xl bg-control-panel border border-control-border shadow-xl p-2 z-40 flex flex-col gap-0.5">
-                    <p className="text-[9px] uppercase tracking-wider font-bold text-control-text/60 px-2 py-1 border-b border-control-border/50 mb-1">
-                      {t("taskMenuTitle")}
-                    </p>
-                    {sidebarLinks.map((link) => {
-                      const Icon = link.icon;
-                      return (
-                        <button
-                          key={link.key}
-                          onClick={() => {
-                            handleSidebarClick(link);
-                            setShowTabMenu(false);
-                          }}
-                          className="flex items-center gap-2.5 w-full rounded-lg px-2.5 py-2 text-xs text-left font-bold uppercase tracking-wider hover:bg-control-panel-light hover:text-control-text-bright text-control-text transition cursor-pointer"
-                        >
-                          <Icon className="h-4 w-4 text-control-cyan shrink-0" />
-                          {t(link.labelKey)}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
+              </div>
             </div>
-          </div>
-        </div>
+          </ContextPanel>
+        )}
 
-        {/* Header Bar */}
-        <header className="border-b border-control-border bg-control-panel px-6 py-4 flex items-center justify-between shadow-sm shrink-0">
-          <div>
-            <h2 className="text-base font-bold text-control-text-bright tracking-tight">
-              {t(activeTab?.title as TranslationKey)}
-            </h2>
-            <p className="text-[10px] text-control-text/80 uppercase tracking-wider">
-              {t("headerSubtitle")}
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 rounded-full border border-control-border bg-control-panel-light px-3 py-1.5 text-xs text-control-text font-bold">
-              <Clock className="h-3.5 w-3.5 text-control-cyan" />
-              {time.toLocaleTimeString()}
+        {activeTab?.type === "access" && (
+          <ContextPanel title="Zone & Doors" defaultWidth={220}>
+            <div className="flex flex-col gap-2">
+              <div className="text-[10px] text-control-text/60 uppercase tracking-widest font-bold">Doors & Gates</div>
+              <div className="border border-control-border bg-control-panel-light/30 rounded p-2 space-y-2">
+                {doors.length === 0 ? (
+                  <div className="text-[10px] text-control-text/40 italic">No doors registered.</div>
+                ) : (
+                  doors.map(door => (
+                    <div key={door.id} className="flex items-center justify-between text-[10px]">
+                      <span className="truncate flex items-center gap-1.5">
+                        <span className={`h-1.5 w-1.5 rounded-full ${door.status === "open" ? "bg-control-green animate-pulse" : "bg-control-gray"}`} />
+                        {door.name}
+                      </span>
+                      <span className="text-[8px] uppercase font-bold bg-control-panel-light px-1 border border-control-border rounded text-control-text/80">
+                        {door.status}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
-            
-            <div className="flex items-center gap-2 rounded-full border border-control-border bg-control-panel-light px-3 py-1.5 text-xs text-control-text font-bold">
-              <span className={`h-2 w-2 rounded-full ${metrics.alerts > 0 ? "bg-control-red animate-pulse" : "bg-control-green"}`} />
-              <span>{metrics.alerts > 0 ? t("activeAlertsCount", { count: metrics.alerts }) : t("systemStable")}</span>
-            </div>
-          </div>
-        </header>
+          </ContextPanel>
+        )}
 
-        {/* Tab Content */}
-        <div className="flex-1 overflow-y-auto p-6 flex flex-col min-h-0">
+        {activeTab?.type === "alarms" && (
+          <ContextPanel title="Alarm Filters" defaultWidth={220}>
+            <div className="flex flex-col gap-2">
+              <div className="text-[10px] text-control-text/60 uppercase tracking-widest font-bold">Priority Levels</div>
+              <div className="space-y-1.5 text-[10px] uppercase font-bold">
+                <div className="flex justify-between items-center p-1.5 border border-control-red/20 bg-control-red/5 rounded text-control-red">
+                  <span>Critical Alarms</span>
+                  <span className="font-bold bg-control-red/25 px-1.5 rounded text-[9px]">{metrics.alerts}</span>
+                </div>
+                <div className="flex justify-between items-center p-1.5 border border-control-amber/20 bg-control-amber/5 rounded text-control-amber">
+                  <span>Warnings</span>
+                  <span className="font-bold bg-control-amber/25 px-1.5 rounded text-[9px]">0</span>
+                </div>
+                <div className="flex justify-between items-center p-1.5 border border-control-border bg-control-panel-light rounded text-control-text">
+                  <span>Resolved Events</span>
+                  <span className="font-bold bg-control-panel-light px-1.5 rounded text-[9px]">12</span>
+                </div>
+              </div>
+            </div>
+          </ContextPanel>
+        )}
+
+        {/* Center Canvas with tab bar and active component */}
+        <MainCanvas
+          tabs={tabs}
+          activeTabId={activeTabId}
+          onTabSelect={setActiveTabId}
+          onTabClose={closeTab}
+          onTabReorder={reorderTabs}
+          onAddTabClick={(type, title) => openTab(type, title, undefined, true)}
+          addTabLinks={sidebarLinks}
+          getTabIcon={getTabIcon}
+          t={t as any}
+        >
           {activeTab?.type === "status" && <HomePortal />}
-
           {activeTab?.type === "live" && <LiveView />}
           {activeTab?.type === "access" && <AccessControl />}
           {activeTab?.type === "alarms" && <Alarms />}
@@ -428,9 +297,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
                 </div>
                 {/* Stats Card 3 */}
                 <div className="wardis-card p-6">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-control-cyan">{t("activeAlerts")}</div>
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-control-cyan">{t("activeAlarms" as any)}</div>
                   <div className="mt-2 text-3xl font-bold text-control-text-bright">{metrics.alerts}</div>
-                  <div className="mt-1 text-xs text-control-text">{t("alertsPriority")}</div>
+                  <div className="mt-1 text-xs text-control-text">{t("alertsPriority" as any)}</div>
                 </div>
               </section>
 
@@ -439,7 +308,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
                 <div className="xl:col-span-6 wardis-panel p-6">
                   <div className="flex items-center justify-between border-b border-control-border/60 pb-3 mb-4">
                      <h3 className="text-sm font-bold text-control-text-bright uppercase tracking-wider">{t("serviceStatus")}</h3>
-                     <span className="rounded-full border border-control-border bg-control-panel-light px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-control-text">
+                     <span className="rounded bg-control-panel-light px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-control-text border border-control-border">
                        {t("latency", { latency })}
                      </span>
                   </div>
@@ -481,8 +350,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
               </section>
             </div>
           )}
-        </div>
-      </main>
+        </MainCanvas>
+      </div>
+
+      {/* Bottom status diagnostics bar */}
+      <StatusBar
+        serverStatus="stable"
+        latency={latency}
+        camerasCount={cameras.length}
+        camerasOnline={metrics.activeCameras}
+        storageUsedPercent={42}
+        selectedTileTelemetry={selectedTileTelemetry}
+        t={t as any}
+      />
     </div>
   );
 };

@@ -1,17 +1,18 @@
 @import "tailwindcss";
 
 @theme {
-  --color-control-bg: #090d16;
-  --color-control-panel: #111827;
-  --color-control-panel-light: #1f2937;
-  --color-control-border: #1f2937;
-  --color-control-border-active: #6366f1;
-  --color-control-cyan: #6366f1;
-  --color-control-green: #34d399;
-  --color-control-amber: #fbbf24;
-  --color-control-red: #f43f5e;
+  --color-control-bg: #0b0e14;
+  --color-control-panel: #12161f;
+  --color-control-panel-light: #1a1f2c;
+  --color-control-border: #242a36;
+  --color-control-border-active: #00a2ff;
+  --color-control-cyan: #00a2ff;
+  --color-control-green: #10b981;
+  --color-control-amber: #f59e0b;
+  --color-control-red: #ef4444;
+  --color-control-gray: #6b7280;
   --color-control-text: #9ca3af;
-  --color-control-text-bright: #f9fafb;
+  --color-control-text-bright: #f3f4f6;
 
   --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
@@ -21,27 +22,29 @@
   --color-control-panel: #ffffff;
   --color-control-panel-light: #f1f5f9;
   --color-control-border: #e2e8f0;
-  --color-control-border-active: #4f46e5;
-  --color-control-cyan: #4f46e5;
+  --color-control-border-active: #0ea5e9;
+  --color-control-cyan: #0ea5e9;
   --color-control-green: #10b981;
   --color-control-amber: #f59e0b;
-  --color-control-red: #e11d48;
+  --color-control-red: #ef4444;
+  --color-control-gray: #6b7280;
   --color-control-text: #475569;
   --color-control-text-bright: #0f172a;
 }
 
 .theme-dark {
-  --color-control-bg: #090d16;
-  --color-control-panel: #111827;
-  --color-control-panel-light: #1f2937;
-  --color-control-border: #1f2937;
-  --color-control-border-active: #6366f1;
-  --color-control-cyan: #6366f1;
-  --color-control-green: #34d399;
-  --color-control-amber: #fbbf24;
-  --color-control-red: #f43f5e;
+  --color-control-bg: #0b0e14;
+  --color-control-panel: #12161f;
+  --color-control-panel-light: #1a1f2c;
+  --color-control-border: #242a36;
+  --color-control-border-active: #00a2ff;
+  --color-control-cyan: #00a2ff;
+  --color-control-green: #10b981;
+  --color-control-amber: #f59e0b;
+  --color-control-red: #ef4444;
+  --color-control-gray: #6b7280;
   --color-control-text: #9ca3af;
-  --color-control-text-bright: #f9fafb;
+  --color-control-text-bright: #f3f4f6;
 }
 
 html, body, #root {
