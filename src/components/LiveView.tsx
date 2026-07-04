@@ -10,7 +10,14 @@ import {
   Trash2, 
   ShieldAlert,
   Settings,
-  ExternalLink
+  ExternalLink,
+  ChevronUp,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ZoomIn,
+  ZoomOut,
+  Gamepad
 } from "lucide-react";
 
 // Standard Site Name Mapping
@@ -31,8 +38,10 @@ interface CameraPlayerProps {
   cameraNom: string;
   statut: string;
   isZoomed?: boolean;
+  isSelected?: boolean;
   onClear: () => void;
   onDoubleClick?: () => void;
+  onClick?: () => void;
 }
 
 const CameraPlayer: React.FC<CameraPlayerProps> = ({ 
@@ -40,8 +49,10 @@ const CameraPlayer: React.FC<CameraPlayerProps> = ({
   cameraNom, 
   statut, 
   isZoomed = false, 
+  isSelected = false,
   onClear, 
-  onDoubleClick 
+  onDoubleClick,
+  onClick
 }) => {
   const [status, setStatus] = useState<"connecting" | "playing" | "error" | "no-signal">("connecting");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -298,10 +309,25 @@ const CameraPlayer: React.FC<CameraPlayerProps> = ({
     setRetryTrigger(prev => prev + 1);
   };
 
+  const sendPTZCommand = useCameraStore((state) => state.sendPTZCommand);
+
+  const startPTZ = (pan: number, tilt: number, zoom: number) => {
+    sendPTZCommand(cameraId, pan, tilt, zoom);
+  };
+
+  const stopPTZ = () => {
+    sendPTZCommand(cameraId, 0, 0, 0);
+  };
+
   return (
     <div 
+      onClick={onClick}
       onDoubleClick={onDoubleClick}
-      className="relative w-full h-full bg-control-panel flex flex-col border border-control-border brackets overflow-hidden group select-none cursor-pointer"
+      className={`relative w-full h-full bg-control-panel flex flex-col border brackets overflow-hidden group select-none cursor-pointer transition-all ${
+        isSelected 
+          ? "border-control-cyan shadow-[0_0_15px_rgba(0,240,255,0.4)] z-10" 
+          : "border-control-border hover:border-control-border/60"
+      }`}
     >
       
       {/* Top overlay panel */}
@@ -404,6 +430,102 @@ const CameraPlayer: React.FC<CameraPlayerProps> = ({
               </div>
             </div>
             
+            {/* Floating PTZ overlay controls */}
+            {isSelected && (
+              <div 
+                onDoubleClick={(e) => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
+                className="absolute bottom-4 right-4 z-10 bg-control-bg/90 border border-control-cyan/40 p-2 flex flex-col items-center gap-1.5 backdrop-blur-xs select-none shadow-[0_0_10px_rgba(0,0,0,0.8)]"
+              >
+                <div className="text-[7px] text-control-cyan/80 uppercase font-mono font-bold tracking-widest mb-1 border-b border-control-border/40 pb-0.5 w-full text-center">PTZ OVERLAY</div>
+                
+                {/* D-Pad Grid */}
+                <div className="grid grid-cols-3 gap-1">
+                  <div />
+                  <button
+                    onMouseDown={() => startPTZ(0, 1, 0)}
+                    onMouseUp={stopPTZ}
+                    onMouseLeave={stopPTZ}
+                    onTouchStart={() => startPTZ(0, 1, 0)}
+                    onTouchEnd={stopPTZ}
+                    className="p-1 border border-control-border hover:border-control-cyan/50 hover:bg-control-cyan/10 text-control-text-bright active:text-control-cyan transition-all cursor-pointer"
+                    title="Haut"
+                  >
+                    <ChevronUp className="h-3 w-3" />
+                  </button>
+                  <div />
+
+                  <button
+                    onMouseDown={() => startPTZ(-1, 0, 0)}
+                    onMouseUp={stopPTZ}
+                    onMouseLeave={stopPTZ}
+                    onTouchStart={() => startPTZ(-1, 0, 0)}
+                    onTouchEnd={stopPTZ}
+                    className="p-1 border border-control-border hover:border-control-cyan/50 hover:bg-control-cyan/10 text-control-text-bright active:text-control-cyan transition-all cursor-pointer"
+                    title="Gauche"
+                  >
+                    <ChevronLeft className="h-3 w-3" />
+                  </button>
+                  <div className="w-5 h-5 border border-dashed border-control-border/30 flex items-center justify-center text-[6px] text-control-text/30 font-mono">
+                    PAD
+                  </div>
+                  <button
+                    onMouseDown={() => startPTZ(1, 0, 0)}
+                    onMouseUp={stopPTZ}
+                    onMouseLeave={stopPTZ}
+                    onTouchStart={() => startPTZ(1, 0, 0)}
+                    onTouchEnd={stopPTZ}
+                    className="p-1 border border-control-border hover:border-control-cyan/50 hover:bg-control-cyan/10 text-control-text-bright active:text-control-cyan transition-all cursor-pointer"
+                    title="Droite"
+                  >
+                    <ChevronRight className="h-3 w-3" />
+                  </button>
+
+                  <div />
+                  <button
+                    onMouseDown={() => startPTZ(0, -1, 0)}
+                    onMouseUp={stopPTZ}
+                    onMouseLeave={stopPTZ}
+                    onTouchStart={() => startPTZ(0, -1, 0)}
+                    onTouchEnd={stopPTZ}
+                    className="p-1 border border-control-border hover:border-control-cyan/50 hover:bg-control-cyan/10 text-control-text-bright active:text-control-cyan transition-all cursor-pointer"
+                    title="Bas"
+                  >
+                    <ChevronDown className="h-3 w-3" />
+                  </button>
+                  <div />
+                </div>
+
+                {/* Zoom Controls */}
+                <div className="flex gap-1 border-t border-control-border/40 pt-1.5 w-full justify-center">
+                  <button
+                    onMouseDown={() => startPTZ(0, 0, 1)}
+                    onMouseUp={stopPTZ}
+                    onMouseLeave={stopPTZ}
+                    onTouchStart={() => startPTZ(0, 0, 1)}
+                    onTouchEnd={stopPTZ}
+                    className="p-0.5 px-1 border border-control-border hover:border-control-cyan/50 hover:bg-control-cyan/10 text-control-text-bright active:text-control-cyan transition-all flex items-center gap-0.5 text-[7px] cursor-pointer"
+                    title="Zoom+"
+                  >
+                    <ZoomIn className="h-2.5 w-2.5" />
+                    <span>Z+</span>
+                  </button>
+                  <button
+                    onMouseDown={() => startPTZ(0, 0, -1)}
+                    onMouseUp={stopPTZ}
+                    onMouseLeave={stopPTZ}
+                    onTouchStart={() => startPTZ(0, 0, -1)}
+                    onTouchEnd={stopPTZ}
+                    className="p-0.5 px-1 border border-control-border hover:border-control-cyan/50 hover:bg-control-cyan/10 text-control-text-bright active:text-control-cyan transition-all flex items-center gap-0.5 text-[7px] cursor-pointer"
+                    title="Zoom-"
+                  >
+                    <ZoomOut className="h-2.5 w-2.5" />
+                    <span>Z-</span>
+                  </button>
+                </div>
+              </div>
+            )}
+            
             {/* CRT Grid scanlines effect */}
             <div className="absolute inset-0 bg-radial-gradient from-transparent to-control-bg/30 pointer-events-none opacity-20" />
           </>
@@ -458,6 +580,183 @@ export const LiveView: React.FC = () => {
 
   // Track the zoomed slot index for high-res stream view
   const [zoomedSlotIndex, setZoomedSlotIndex] = useState<number | null>(null);
+
+  // Track selected camera slot index for PTZ focus
+  const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
+
+  // Gamepad / Joystick connection states
+  const [isGamepadConnected, setIsGamepadConnected] = useState(false);
+  const [gamepadName, setGamepadName] = useState<string | null>(null);
+
+  // Joystick real-time telemetry coordinates
+  const [joystickTelemetry, setJoystickTelemetry] = useState({ pan: 0, tilt: 0, zoom: 0 });
+  const telemetryRef = useRef({ pan: 0, tilt: 0, zoom: 0 });
+
+  const sendPTZCommand = useCameraStore((state) => state.sendPTZCommand);
+
+  // Helper to resolve currently active camera in the workspace
+  const getActiveCameraId = (): string | null => {
+    if (zoomedSlotIndex !== null) {
+      return slotAssignments[zoomedSlotIndex];
+    }
+    if (selectedSlotIndex !== null) {
+      return slotAssignments[selectedSlotIndex];
+    }
+    const firstActiveIdx = slotAssignments.findIndex((id) => id !== null);
+    return firstActiveIdx !== -1 ? slotAssignments[firstActiveIdx] : null;
+  };
+
+  const getActiveSlotIndex = (): number | null => {
+    if (zoomedSlotIndex !== null) {
+      return zoomedSlotIndex;
+    }
+    if (selectedSlotIndex !== null) {
+      return selectedSlotIndex;
+    }
+    const firstActiveIdx = slotAssignments.findIndex((id) => id !== null);
+    return firstActiveIdx !== -1 ? firstActiveIdx : null;
+  };
+
+  const activeCameraId = getActiveCameraId();
+  const activeCamera = cameras.find((c) => c.id === activeCameraId);
+
+  const startPTZ = (pan: number, tilt: number, zoom: number) => {
+    if (activeCameraId) {
+      sendPTZCommand(activeCameraId, pan, tilt, zoom);
+    }
+  };
+
+  const stopPTZ = () => {
+    if (activeCameraId) {
+      sendPTZCommand(activeCameraId, 0, 0, 0);
+    }
+  };
+
+  // Gamepad Connection Listeners
+  useEffect(() => {
+    const handleConnect = (e: GamepadEvent) => {
+      console.log("Gamepad connected:", e.gamepad);
+      setIsGamepadConnected(true);
+      setGamepadName(e.gamepad.id);
+    };
+    const handleDisconnect = (e: GamepadEvent) => {
+      console.log("Gamepad disconnected:", e.gamepad);
+      setIsGamepadConnected(false);
+      setGamepadName(null);
+    };
+
+    window.addEventListener("gamepadconnected", handleConnect);
+    window.addEventListener("gamepaddisconnected", handleDisconnect);
+
+    const gps = navigator.getGamepads ? navigator.getGamepads() : [];
+    const connectedGp = gps.find(g => g !== null);
+    if (connectedGp) {
+      setIsGamepadConnected(true);
+      setGamepadName(connectedGp.id);
+    }
+
+    return () => {
+      window.removeEventListener("gamepadconnected", handleConnect);
+      window.removeEventListener("gamepaddisconnected", handleDisconnect);
+    };
+  }, []);
+
+  // Gamepad requestAnimationFrame Polling Loop
+  useEffect(() => {
+    let animationFrameId: number;
+    let lastSentPan = 0;
+    let lastSentTilt = 0;
+    let lastSentZoom = 0;
+    let lastCommandTime = 0;
+    const THROTTLE_MS = 150;
+
+    const checkGamepad = () => {
+      const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+      let activeGamepad = null;
+
+      for (const gp of gamepads) {
+        if (gp) {
+          activeGamepad = gp;
+          break;
+        }
+      }
+
+      if (activeGamepad) {
+        let panVal = activeGamepad.axes[0] || 0;
+        let tiltVal = activeGamepad.axes[1] || 0;
+
+        const DEADZONE = 0.15;
+        if (Math.abs(panVal) < DEADZONE) panVal = 0;
+        if (Math.abs(tiltVal) < DEADZONE) tiltVal = 0;
+
+        let mappedTilt = -tiltVal; // invert Gamepad vertical axis to positive-up ONVIF standard
+        let mappedPan = panVal;
+
+        let zoomInPressed = false;
+        let zoomOutPressed = false;
+
+        if (activeGamepad.buttons[0]?.pressed || activeGamepad.buttons[5]?.pressed) {
+          zoomInPressed = true;
+        }
+        if (activeGamepad.buttons[1]?.pressed || activeGamepad.buttons[4]?.pressed) {
+          zoomOutPressed = true;
+        }
+
+        let zoomVal = 0;
+        if (zoomInPressed) {
+          zoomVal = 1;
+        } else if (zoomOutPressed) {
+          zoomVal = -1;
+        } else {
+          const zoomAxisVal = activeGamepad.axes[2] || 0;
+          if (Math.abs(zoomAxisVal) > DEADZONE) {
+            zoomVal = zoomAxisVal;
+          }
+        }
+
+        const pan = Math.round(mappedPan * 100) / 100;
+        const tilt = Math.round(mappedTilt * 100) / 100;
+        const zoom = Math.round(zoomVal * 100) / 100;
+
+        if (pan !== telemetryRef.current.pan || 
+            tilt !== telemetryRef.current.tilt || 
+            zoom !== telemetryRef.current.zoom) {
+          telemetryRef.current = { pan, tilt, zoom };
+          setJoystickTelemetry({ pan, tilt, zoom });
+        }
+
+        const now = Date.now();
+        const hasChanged = pan !== lastSentPan || tilt !== lastSentTilt || zoom !== lastSentZoom;
+        const isThrottled = now - lastCommandTime < THROTTLE_MS;
+
+        if (hasChanged || ((pan !== 0 || tilt !== 0 || zoom !== 0) && !isThrottled)) {
+          const currentCamId = getActiveCameraId();
+          if (currentCamId) {
+            if (hasChanged || !isThrottled) {
+              sendPTZCommand(currentCamId, pan, tilt, zoom);
+              lastSentPan = pan;
+              lastSentTilt = tilt;
+              lastSentZoom = zoom;
+              lastCommandTime = now;
+            }
+          }
+        }
+      } else {
+        if (telemetryRef.current.pan !== 0 || telemetryRef.current.tilt !== 0 || telemetryRef.current.zoom !== 0) {
+          telemetryRef.current = { pan: 0, tilt: 0, zoom: 0 };
+          setJoystickTelemetry({ pan: 0, tilt: 0, zoom: 0 });
+        }
+      }
+
+      animationFrameId = requestAnimationFrame(checkGamepad);
+    };
+
+    animationFrameId = requestAnimationFrame(checkGamepad);
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [slotAssignments, selectedSlotIndex, zoomedSlotIndex]);
 
   useEffect(() => {
     fetchCameras();
@@ -606,133 +905,349 @@ export const LiveView: React.FC = () => {
           </button>
         </div>
       ) : (
-        <div className="flex-1 min-h-0 relative flex flex-col">
-          {zoomedSlotIndex !== null ? (() => {
-            const assignedCamId = slotAssignments[zoomedSlotIndex];
-            const camera = cameras.find((c) => c.id === assignedCamId);
-            if (assignedCamId && camera) {
-              return (
-                <div className="flex-1 min-h-0 grid grid-cols-1">
-                  <CameraPlayer
-                    key={`zoomed-${zoomedSlotIndex}-${assignedCamId}`}
-                    cameraId={assignedCamId}
-                    cameraNom={camera.nom}
-                    statut={camera.statut}
-                    isZoomed={true}
-                    onClear={() => {
-                      handleClearSlot(zoomedSlotIndex);
-                      setZoomedSlotIndex(null);
-                    }}
-                    onDoubleClick={() => setZoomedSlotIndex(null)}
-                  />
-                </div>
-              );
-            }
-            setZoomedSlotIndex(null);
-            return null;
-          })() : (
-            <div className={`flex-1 min-h-0 grid ${getGridColsClass()} gap-3`}>
-              {Array.from({ length: layoutSize }).map((_, idx) => {
-                const assignedCamId = slotAssignments[idx];
-                const camera = cameras.find((c) => c.id === assignedCamId);
-
-                if (assignedCamId && camera) {
-                  return (
+        <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-4 relative">
+          
+          {/* Grid View wrapper */}
+          <div className="flex-1 min-h-0 relative flex flex-col">
+            {zoomedSlotIndex !== null ? (() => {
+              const assignedCamId = slotAssignments[zoomedSlotIndex];
+              const camera = cameras.find((c) => c.id === assignedCamId);
+              if (assignedCamId && camera) {
+                return (
+                  <div className="flex-1 min-h-0 grid grid-cols-1">
                     <CameraPlayer
-                      key={`${idx}-${assignedCamId}`}
+                      key={`zoomed-${zoomedSlotIndex}-${assignedCamId}`}
                       cameraId={assignedCamId}
                       cameraNom={camera.nom}
                       statut={camera.statut}
-                      isZoomed={false}
-                      onClear={() => handleClearSlot(idx)}
-                      onDoubleClick={() => setZoomedSlotIndex(idx)}
+                      isZoomed={true}
+                      isSelected={true}
+                      onClear={() => {
+                        handleClearSlot(zoomedSlotIndex);
+                        setZoomedSlotIndex(null);
+                      }}
+                      onDoubleClick={() => setZoomedSlotIndex(null)}
                     />
-                  );
-                }
-
-                // Empty slot state
-                return (
-                  <div 
-                    key={`empty-${idx}`}
-                    className="relative w-full h-full bg-control-panel/40 border border-dashed border-control-border hover:border-control-cyan/40 transition-all flex flex-col items-center justify-center p-4 text-center select-none font-mono"
-                  >
-                {activePickerSlot === idx ? (
-                  /* Camera Selector Overlay inside the slot */
-                  <div className="absolute inset-0 bg-control-bg/95 z-10 flex flex-col p-3 text-left overflow-y-auto">
-                    <div className="flex items-center justify-between border-b border-control-border pb-1.5 mb-2 shrink-0">
-                      <span className="text-[10px] text-control-text-bright font-bold uppercase tracking-wider">
-                        Select Cam For Slot {idx + 1}
-                      </span>
-                      <button 
-                        onClick={() => setActivePickerSlot(null)}
-                        className="text-[9px] text-control-red hover:underline uppercase"
-                      >
-                        Close
-                      </button>
-                    </div>
-                    
-                    <div className="flex-1 space-y-1">
-                      {filteredCameras.length === 0 ? (
-                        <p className="text-[9px] text-control-text/50 uppercase italic p-2">
-                          No cameras available for this filter.
-                        </p>
-                      ) : (
-                        filteredCameras.map((cam) => {
-                          const isAssigned = slotAssignments.includes(cam.id);
-                          return (
-                            <button
-                              key={cam.id}
-                              disabled={isAssigned}
-                              onClick={() => handleAssignCamera(idx, cam.id)}
-                              className={`w-full text-left px-2 py-1.5 text-[10px] border flex items-center justify-between transition-all ${
-                                isAssigned 
-                                  ? "border-transparent bg-control-panel-light/30 text-control-text/40 cursor-not-allowed" 
-                                  : "border-control-border bg-control-panel hover:bg-control-cyan/5 hover:border-control-cyan/35 text-control-text hover:text-control-text-bright cursor-pointer"
-                              }`}
-                            >
-                              <div className="flex items-center gap-1.5 truncate">
-                                <span className={`h-1.5 w-1.5 rounded-full ${cam.statut === "active" ? "bg-control-green" : "bg-control-red"}`} />
-                                <span className="truncate">{cam.nom}</span>
-                              </div>
-                              <span className="text-[8px] text-control-text/40 shrink-0">
-                                {isAssigned ? "USED" : cam.statut.toUpperCase()}
-                              </span>
-                            </button>
-                          );
-                        })
-                      )}
-                    </div>
                   </div>
-                ) : (
-                  /* Default Empty Placeholder */
-                  <>
-                    <div className="absolute inset-0 bg-radial-gradient from-transparent to-control-bg/60 opacity-30 pointer-events-none" />
-                    
-                    <div className="z-10 flex flex-col items-center gap-2">
-                      <button 
-                        onClick={() => setActivePickerSlot(idx)}
-                        className="p-3 border border-control-border bg-control-panel-light text-control-cyan/40 hover:text-control-cyan hover:border-control-cyan/50 hover:glow transition-all cursor-pointer rounded-none"
-                      >
-                        <Plus className="h-6 w-6" />
-                      </button>
-                      <div>
-                        <div className="text-[10px] text-control-text-bright font-bold uppercase tracking-widest">
-                          SLOT {idx + 1} EMPTY
-                        </div>
-                        <p className="text-[8px] text-control-text/60 mt-1 max-w-[160px] leading-relaxed uppercase">
-                          Click "+" to bind a camera to this viewport.
-                        </p>
+                );
+              }
+              setZoomedSlotIndex(null);
+              return null;
+            })() : (
+              <div className={`flex-1 min-h-0 grid ${getGridColsClass()} gap-3`}>
+                {Array.from({ length: layoutSize }).map((_, idx) => {
+                  const assignedCamId = slotAssignments[idx];
+                  const camera = cameras.find((c) => c.id === assignedCamId);
+
+                  if (assignedCamId && camera) {
+                    const isSelected = getActiveSlotIndex() === idx;
+                    return (
+                      <CameraPlayer
+                        key={`${idx}-${assignedCamId}`}
+                        cameraId={assignedCamId}
+                        cameraNom={camera.nom}
+                        statut={camera.statut}
+                        isZoomed={false}
+                        isSelected={isSelected}
+                        onClick={() => setSelectedSlotIndex(idx)}
+                        onClear={() => handleClearSlot(idx)}
+                        onDoubleClick={() => setZoomedSlotIndex(idx)}
+                      />
+                    );
+                  }
+
+                  // Empty slot state
+                  const isSelected = getActiveSlotIndex() === idx;
+                  return (
+                    <div 
+                      key={`empty-${idx}`}
+                      onClick={() => setSelectedSlotIndex(idx)}
+                      className={`relative w-full h-full bg-control-panel/40 border transition-all flex flex-col items-center justify-center p-4 text-center select-none font-mono ${
+                        isSelected 
+                          ? "border-control-cyan shadow-[0_0_15px_rgba(0,240,255,0.4)] z-10" 
+                          : "border-dashed border-control-border hover:border-control-cyan/40"
+                      }`}
+                    >
+                  {activePickerSlot === idx ? (
+                    /* Camera Selector Overlay inside the slot */
+                    <div className="absolute inset-0 bg-control-bg/95 z-10 flex flex-col p-3 text-left overflow-y-auto">
+                      <div className="flex items-center justify-between border-b border-control-border pb-1.5 mb-2 shrink-0">
+                        <span className="text-[10px] text-control-text-bright font-bold uppercase tracking-wider">
+                          Select Cam For Slot {idx + 1}
+                        </span>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); setActivePickerSlot(null); }}
+                          className="text-[9px] text-control-red hover:underline uppercase"
+                        >
+                          Close
+                        </button>
+                      </div>
+                      
+                      <div className="flex-1 space-y-1">
+                        {filteredCameras.length === 0 ? (
+                          <p className="text-[9px] text-control-text/50 uppercase italic p-2">
+                            No cameras available for this filter.
+                          </p>
+                        ) : (
+                          filteredCameras.map((cam) => {
+                            const isAssigned = slotAssignments.includes(cam.id);
+                            return (
+                              <button
+                                key={cam.id}
+                                disabled={isAssigned}
+                                onClick={(e) => { e.stopPropagation(); handleAssignCamera(idx, cam.id); }}
+                                className={`w-full text-left px-2 py-1.5 text-[10px] border flex items-center justify-between transition-all ${
+                                  isAssigned 
+                                    ? "border-transparent bg-control-panel-light/30 text-control-text/40 cursor-not-allowed" 
+                                    : "border-control-border bg-control-panel hover:bg-control-cyan/5 hover:border-control-cyan/35 text-control-text hover:text-control-text-bright cursor-pointer"
+                                }`}
+                              >
+                                <div className="flex items-center gap-1.5 truncate">
+                                  <span className={`h-1.5 w-1.5 rounded-full ${cam.statut === "active" ? "bg-control-green" : "bg-control-red"}`} />
+                                  <span className="truncate">{cam.nom}</span>
+                                </div>
+                                <span className="text-[8px] text-control-text/40 shrink-0">
+                                  {isAssigned ? "USED" : cam.statut.toUpperCase()}
+                                </span>
+                              </button>
+                            );
+                          })
+                        )}
                       </div>
                     </div>
-                  </>
-                )}
+                  ) : (
+                    /* Default Empty Placeholder */
+                    <>
+                      <div className="absolute inset-0 bg-radial-gradient from-transparent to-control-bg/60 opacity-30 pointer-events-none" />
+                      
+                      <div className="z-10 flex flex-col items-center gap-2">
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); setActivePickerSlot(idx); }}
+                          className="p-3 border border-control-border bg-control-panel-light text-control-cyan/40 hover:text-control-cyan hover:border-control-cyan/50 hover:glow transition-all cursor-pointer rounded-none"
+                        >
+                          <Plus className="h-6 w-6" />
+                        </button>
+                        <div>
+                          <div className="text-[10px] text-control-text-bright font-bold uppercase tracking-widest">
+                            SLOT {idx + 1} EMPTY
+                          </div>
+                          <p className="text-[8px] text-control-text/60 mt-1 max-w-[160px] leading-relaxed uppercase">
+                            Click "+" to bind a camera to this viewport.
+                          </p>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+        {/* PTZ Lateral Sidebar Panel */}
+        <div className="w-full lg:w-72 bg-control-panel border border-control-border p-4 font-mono select-none flex flex-col shrink-0 brackets gap-4">
+          <div className="flex items-center justify-between border-b border-control-border pb-2">
+            <span className="text-xs text-control-text-bright font-bold uppercase tracking-wider">PTZ Camera Control</span>
+            <span className="h-1.5 w-1.5 rounded-full bg-control-cyan animate-pulse" />
+          </div>
+
+          {activeCamera ? (
+            <div className="flex flex-col gap-1 text-[10px] bg-control-panel-light/40 border border-control-border p-2">
+              <div className="text-control-cyan font-bold uppercase truncate">
+                CAM // {activeCamera.nom}
               </div>
-            );
-          })}
+              <div className="text-control-text/60 text-[8px] truncate">
+                ID: {activeCamera.id}
+              </div>
+              <div className="text-control-text/60 text-[8px] truncate">
+                STREAM: {activeCamera.main_stream_url ? "WHEP/HLS SYNCED" : "OFFLINE"}
+              </div>
+              <div className="text-control-text/60 text-[8px]">
+                STATUS: <span className="text-control-green font-bold uppercase">{activeCamera.statut}</span>
+              </div>
+            </div>
+          ) : (
+            <div className="text-[10px] text-control-text/40 italic bg-control-panel-light/20 border border-dashed border-control-border/60 p-3 text-center">
+              No camera active in selected slot.
+            </div>
+          )}
+
+          {/* D-Pad controls */}
+          <div className="flex flex-col items-center gap-3 border-t border-b border-control-border/50 py-4">
+            <span className="text-[9px] text-control-text/60 uppercase font-bold tracking-widest">Directional Move</span>
+            <div className="grid grid-cols-3 gap-2 w-36 h-36">
+              <div />
+              <button
+                disabled={!activeCameraId}
+                onMouseDown={() => activeCameraId && startPTZ(0, 1, 0)}
+                onMouseUp={stopPTZ}
+                onMouseLeave={stopPTZ}
+                onTouchStart={() => activeCameraId && startPTZ(0, 1, 0)}
+                onTouchEnd={stopPTZ}
+                className={`border flex items-center justify-center transition-all ${
+                  activeCameraId
+                    ? "border-control-border bg-control-panel-light text-control-text-bright hover:border-control-cyan/50 hover:bg-control-cyan/10 active:bg-control-cyan/20 cursor-pointer"
+                    : "border-control-border/20 text-control-text/20 cursor-not-allowed"
+                }`}
+                title="UP (Haut)"
+              >
+                <ChevronUp className="h-6 w-6" />
+              </button>
+              <div />
+
+              <button
+                disabled={!activeCameraId}
+                onMouseDown={() => activeCameraId && startPTZ(-1, 0, 0)}
+                onMouseUp={stopPTZ}
+                onMouseLeave={stopPTZ}
+                onTouchStart={() => activeCameraId && startPTZ(-1, 0, 0)}
+                onTouchEnd={stopPTZ}
+                className={`border flex items-center justify-center transition-all ${
+                  activeCameraId
+                    ? "border-control-border bg-control-panel-light text-control-text-bright hover:border-control-cyan/50 hover:bg-control-cyan/10 active:bg-control-cyan/20 cursor-pointer"
+                    : "border-control-border/20 text-control-text/20 cursor-not-allowed"
+                }`}
+                title="LEFT (Gauche)"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </button>
+              
+              <button
+                disabled={!activeCameraId}
+                onClick={stopPTZ}
+                className={`border flex items-center justify-center text-[9px] font-bold uppercase transition-all ${
+                  activeCameraId
+                    ? "border-control-red/40 bg-control-red/5 text-control-red hover:bg-control-red/15 hover:border-control-red cursor-pointer"
+                    : "border-control-border/20 text-control-text/20 cursor-not-allowed"
+                }`}
+                title="STOP"
+              >
+                STOP
+              </button>
+
+              <button
+                disabled={!activeCameraId}
+                onMouseDown={() => activeCameraId && startPTZ(1, 0, 0)}
+                onMouseUp={stopPTZ}
+                onMouseLeave={stopPTZ}
+                onTouchStart={() => activeCameraId && startPTZ(1, 0, 0)}
+                onTouchEnd={stopPTZ}
+                className={`border flex items-center justify-center transition-all ${
+                  activeCameraId
+                    ? "border-control-border bg-control-panel-light text-control-text-bright hover:border-control-cyan/50 hover:bg-control-cyan/10 active:bg-control-cyan/20 cursor-pointer"
+                    : "border-control-border/20 text-control-text/20 cursor-not-allowed"
+                }`}
+                title="RIGHT (Droite)"
+              >
+                <ChevronRight className="h-6 w-6" />
+              </button>
+
+              <div />
+              <button
+                disabled={!activeCameraId}
+                onMouseDown={() => activeCameraId && startPTZ(0, -1, 0)}
+                onMouseUp={stopPTZ}
+                onMouseLeave={stopPTZ}
+                onTouchStart={() => activeCameraId && startPTZ(0, -1, 0)}
+                onTouchEnd={stopPTZ}
+                className={`border flex items-center justify-center transition-all ${
+                  activeCameraId
+                    ? "border-control-border bg-control-panel-light text-control-text-bright hover:border-control-cyan/50 hover:bg-control-cyan/10 active:bg-control-cyan/20 cursor-pointer"
+                    : "border-control-border/20 text-control-text/20 cursor-not-allowed"
+                }`}
+                title="DOWN (Bas)"
+              >
+                <ChevronDown className="h-6 w-6" />
+              </button>
+              <div />
+            </div>
+          </div>
+
+          {/* Zoom controls */}
+          <div className="flex flex-col items-center gap-2">
+            <span className="text-[9px] text-control-text/60 uppercase font-bold tracking-widest">Zoom Control</span>
+            <div className="flex gap-2 w-full">
+              <button
+                disabled={!activeCameraId}
+                onMouseDown={() => activeCameraId && startPTZ(0, 0, 1)}
+                onMouseUp={stopPTZ}
+                onMouseLeave={stopPTZ}
+                onTouchStart={() => activeCameraId && startPTZ(0, 0, 1)}
+                onTouchEnd={stopPTZ}
+                className={`flex-1 py-2 border flex items-center justify-center gap-1.5 text-xs font-bold uppercase transition-all ${
+                  activeCameraId
+                    ? "border-control-border bg-control-panel-light text-control-text-bright hover:border-control-cyan/50 hover:bg-control-cyan/10 active:bg-control-cyan/20 cursor-pointer"
+                    : "border-control-border/20 text-control-text/20 cursor-not-allowed"
+                }`}
+                title="Zoom In"
+              >
+                <ZoomIn className="h-4 w-4" />
+                <span>Zoom +</span>
+              </button>
+              
+              <button
+                disabled={!activeCameraId}
+                onMouseDown={() => activeCameraId && startPTZ(0, 0, -1)}
+                onMouseUp={stopPTZ}
+                onMouseLeave={stopPTZ}
+                onTouchStart={() => activeCameraId && startPTZ(0, 0, -1)}
+                onTouchEnd={stopPTZ}
+                className={`flex-1 py-2 border flex items-center justify-center gap-1.5 text-xs font-bold uppercase transition-all ${
+                  activeCameraId
+                    ? "border-control-border bg-control-panel-light text-control-text-bright hover:border-control-cyan/50 hover:bg-control-cyan/10 active:bg-control-cyan/20 cursor-pointer"
+                    : "border-control-border/20 text-control-text/20 cursor-not-allowed"
+                }`}
+                title="Zoom -"
+              >
+                <ZoomOut className="h-4 w-4" />
+                <span>Zoom -</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Gamepad telemetry */}
+          <div className="border-t border-control-border/50 pt-3 flex flex-col gap-2">
+            <div className="flex items-center justify-between text-[9px] text-control-text/60 uppercase font-bold tracking-widest">
+              <span className="flex items-center gap-1.5">
+                <Gamepad className="h-3.5 w-3.5" />
+                <span>USB PTZ Joystick</span>
+              </span>
+              <span className={`h-1.5 w-1.5 rounded-full ${isGamepadConnected ? "bg-control-green animate-pulse" : "bg-control-text/30"}`} />
+            </div>
+            
+            <div className="bg-control-bg/60 border border-control-border p-2 text-[9px] flex flex-col gap-1.5 font-mono">
+              <div className="flex justify-between items-center text-control-text/50">
+                <span>STATUS:</span>
+                <span className={`font-bold ${isGamepadConnected ? "text-control-green" : "text-control-text/40"}`}>
+                  {isGamepadConnected ? "CONNECTED" : "DISCONNECTED"}
+                </span>
+              </div>
+              {isGamepadConnected && (
+                <>
+                  <div className="text-[8px] text-control-cyan truncate uppercase leading-none">
+                    DEVICE: {gamepadName}
+                  </div>
+                  <div className="border-t border-control-border/40 my-1" />
+                  <div className="flex justify-between text-[8px] leading-none">
+                    <span className="text-control-text/50">PAN AXIS:</span>
+                    <span className="text-control-text-bright font-bold">{joystickTelemetry.pan.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-[8px] leading-none">
+                    <span className="text-control-text/50">TILT AXIS:</span>
+                    <span className="text-control-text-bright font-bold">{joystickTelemetry.tilt.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-[8px] leading-none">
+                    <span className="text-control-text/50">ZOOM AXIS:</span>
+                    <span className="text-control-text-bright font-bold">{joystickTelemetry.zoom.toFixed(2)}</span>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         </div>
-      )}
-    </div>
-  )}
-</div>
+      </div>
+    )}
+  </div>
   );
 };

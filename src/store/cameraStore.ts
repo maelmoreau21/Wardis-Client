@@ -20,6 +20,7 @@ interface CameraState {
   fetchCameras: () => Promise<void>;
   generateStreamToken: (cameraId: string) => Promise<string>;
   configureWHEPStream: (cameraId: string) => Promise<string>;
+  sendPTZCommand: (cameraId: string, pan: number, tilt: number, zoom: number) => Promise<void>;
 }
 
 const API_BASE = "http://localhost:8080";
@@ -83,5 +84,25 @@ export const useCameraStore = create<CameraState>((set) => ({
 
     const data = await response.json();
     return data.whep_url;
+  },
+
+  sendPTZCommand: async (cameraId: string, pan: number, tilt: number, zoom: number) => {
+    const token = useAuthStore.getState().token;
+    try {
+      const response = await fetch(`${API_BASE}/cameras/${cameraId}/ptz`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({ pan, tilt, zoom }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send PTZ command");
+      }
+    } catch (err: any) {
+      console.error(`PTZ action failed for camera ${cameraId}:`, err);
+    }
   },
 }));
