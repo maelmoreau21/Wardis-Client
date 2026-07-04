@@ -29,6 +29,11 @@ export const translations = {
     submitting: "Validation en cours...",
     loginButton: "Se connecter",
     authFooter: "Console réservée au personnel autorisé",
+    errorInvalidPasswordLength: "Longueur de mot de passe invalide (minimum 4 caractères).",
+    errorInvalidIdentifierFormat: "Format d'identifiant invalide (minimum 3 caractères).",
+    errorInvalidCredentials: "Nom d'utilisateur ou mot de passe incorrect.",
+    errorInternalServer: "Erreur interne du serveur.",
+    errorConnectionFailed: "Impossible de se connecter à la passerelle de sécurité.",
     
     // Dashboard Navigation & Shell
     dashboardTitle: "Supervision",
@@ -103,6 +108,11 @@ export const translations = {
     submitting: "Validating...",
     loginButton: "Sign in",
     authFooter: "Console reserved for authorized personnel",
+    errorInvalidPasswordLength: "Invalid password length (minimum 4 characters).",
+    errorInvalidIdentifierFormat: "Invalid identifier format (minimum 3 characters).",
+    errorInvalidCredentials: "Invalid username or password.",
+    errorInternalServer: "Internal server error.",
+    errorConnectionFailed: "Failed to connect to the security gateway.",
     
     // Dashboard Navigation & Shell
     dashboardTitle: "Supervision",

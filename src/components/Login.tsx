@@ -69,6 +69,27 @@ export const Login: React.FC<LoginProps> = ({ theme, onToggleTheme }) => {
     await login(serverUrl, email, password);
   };
 
+  const getTranslatedError = (err: string | null): string => {
+    if (!err) return "";
+    const lower = err.toLowerCase();
+    if (lower.includes("password length")) {
+      return t("errorInvalidPasswordLength");
+    }
+    if (lower.includes("identifier format")) {
+      return t("errorInvalidIdentifierFormat");
+    }
+    if (lower.includes("invalid email or password") || lower.includes("credentials")) {
+      return t("errorInvalidCredentials");
+    }
+    if (lower.includes("internal server error")) {
+      return t("errorInternalServer");
+    }
+    if (lower.includes("connection to security gateway failed")) {
+      return t("errorConnectionFailed");
+    }
+    return err;
+  };
+
   return (
     <div className="relative min-h-screen w-full wardis-shell flex items-center justify-center p-4 sm:p-6 md:p-8 overflow-hidden">
       {/* Background soft glowing lights */}
@@ -180,7 +201,7 @@ export const Login: React.FC<LoginProps> = ({ theme, onToggleTheme }) => {
             {error && (
               <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-control-red/20 bg-control-red/5 p-3.5 text-xs text-control-red font-semibold">
                 <ShieldAlert className="h-4 w-4 shrink-0" />
-                <span>{error}</span>
+                <span>{getTranslatedError(error)}</span>
               </div>
             )}
 
