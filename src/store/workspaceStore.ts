@@ -10,7 +10,9 @@ export type TabType =
   | "users" 
   | "settings"
   | "camera-config"
-  | "diagnostics";
+  | "diagnostics"
+  | "reports"
+  | "admin-system";
 
 export interface WorkspaceTab {
   id: string;
