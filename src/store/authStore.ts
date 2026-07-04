@@ -1,6 +1,5 @@
 import { create } from "zustand";
-import { fetch } from "@tauri-apps/plugin-http";
-import { getApiBase } from "./config";
+import { getApiBase, safeFetch } from "./config";
 
 interface UserProfile {
   id: string;
@@ -54,7 +53,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const apiBase = getApiBase();
       // 1. Post to login endpoint
-      const response = await fetch(`${apiBase}/login`, {
+      const response = await safeFetch(`${apiBase}/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -77,7 +76,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const token = loginData.token;
 
       // 2. Fetch user profile from /me
-      const profileResponse = await fetch(`${apiBase}/me`, {
+      const profileResponse = await safeFetch(`${apiBase}/me`, {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -122,7 +121,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       if (currentToken) {
         // Attempt logout call to backend
-        await fetch(`${apiBase}/logout`, {
+        await safeFetch(`${apiBase}/logout`, {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${currentToken}`,

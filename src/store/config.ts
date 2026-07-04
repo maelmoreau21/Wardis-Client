@@ -1,3 +1,19 @@
+import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
+
+export const safeFetch = async (url: string, options?: any): Promise<Response> => {
+  const isTauri = typeof window !== "undefined" && (window as any).__TAURI_INTERNALS__ !== undefined;
+  if (isTauri) {
+    try {
+      return await tauriFetch(url, options);
+    } catch (e) {
+      console.warn("Tauri fetch failed, falling back to window.fetch:", e);
+      return await window.fetch(url, options);
+    }
+  } else {
+    return await window.fetch(url, options);
+  }
+};
+
 export const getServerHost = (): string => {
   const url = localStorage.getItem("wardis-server-url") || "http://localhost:8080";
   try {

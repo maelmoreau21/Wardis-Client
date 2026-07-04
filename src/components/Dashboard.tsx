@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useAuthStore } from "../store/authStore";
-import { LogOut, Radio, Terminal, Cpu, Clock, LayoutGrid, ShieldAlert, Map, Camera, DoorOpen, Sparkles, Moon, Sun } from "lucide-react";
+import { LogOut, Radio, Terminal, Cpu, Clock, LayoutGrid, ShieldAlert, Map, Camera, DoorOpen, Sparkles, Moon, Sun, Globe } from "lucide-react";
+import { useLanguageStore, type TranslationKey } from "../store/languageStore";
 import { LiveView } from "./LiveView";
 import { useCameraStore } from "../store/cameraStore";
 import { AccessControl } from "./AccessControl";
@@ -17,11 +18,12 @@ interface DashboardProps {
 
 export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) => {
   const { user, logout } = useAuthStore();
+  const { t, language, setLanguage } = useLanguageStore();
   const { cameras } = useCameraStore();
   const { doors, fetchDoors } = useAccessControlStore();
   const { connectEventStream, disconnectEventStream, activeAlarms } = useAlarmStore();
   const [time, setTime] = useState(new Date());
-  const [sysLogs, setSysLogs] = useState<string[]>([]);
+  const [sysLogs, setSysLogs] = useState<{ time: string; key: TranslationKey; variables?: any }[]>([]);
   const [latency, setLatency] = useState(12);
   const [activeTab, setActiveTab] = useState<"status" | "live" | "access" | "alarms" | "events" | "map">("status");
 
@@ -42,20 +44,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
   }, []);
 
   useEffect(() => {
-    const events = [
-      "Système d’accès prêt et à l’écoute",
-      "Synchronisation vidéo OK",
-      "Zones d’intrusion armées",
-      "Flux d’événements stable",
-      "Aucune alerte critique détectée"
+    const events: TranslationKey[] = [
+      "accessSystemReady",
+      "videoSyncOk",
+      "intrusionZonesArmed",
+      "eventStreamStable",
+      "noCriticalAlerts"
     ];
 
-    setSysLogs([`${new Date().toLocaleTimeString()} • Tableau de bord prêt`]);
+    setSysLogs([{ time: new Date().toLocaleTimeString(), key: "dashboardReady" }]);
 
     const interval = setInterval(() => {
-      const randomEvent = events[Math.floor(Math.random() * events.length)];
+      const randomEventKey = events[Math.floor(Math.random() * events.length)];
       setSysLogs((prev) => {
-        const next = [...prev, `${new Date().toLocaleTimeString()} • ${randomEvent}`];
+        const next = [...prev, { time: new Date().toLocaleTimeString(), key: randomEventKey }];
         return next.slice(-4);
       });
       setLatency(Math.floor(Math.random() * 8) + 8);
@@ -71,14 +73,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
     alerts: activeAlarms.length
   }), [cameras, doors, activeAlarms]);
 
-  const tabs = [
-    { key: "status", label: "Vue d’ensemble", icon: LayoutGrid },
-    { key: "live", label: "Surveillance", icon: Camera },
-    { key: "access", label: "Accès", icon: DoorOpen },
-    { key: "alarms", label: "Alertes", icon: ShieldAlert },
-    { key: "events", label: "Événements", icon: Radio },
-    { key: "map", label: "Carte", icon: Map }
-  ] as const;
+  const tabs = useMemo(() => [
+    { key: "status", label: t("overviewTab"), icon: LayoutGrid },
+    { key: "live", label: t("liveTab"), icon: Camera },
+    { key: "access", label: t("accessTab"), icon: DoorOpen },
+    { key: "alarms", label: t("alertsTab"), icon: ShieldAlert },
+    { key: "events", label: t("eventsTab"), icon: Radio },
+    { key: "map", label: t("mapTab"), icon: Map }
+  ] as const, [t]);
 
   return (
     <div className="flex h-screen w-screen bg-control-bg overflow-hidden text-control-text select-none">
@@ -98,7 +100,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
                   v0.0.1
                 </span>
               </div>
-              <p className="text-[10px] text-control-text/75 uppercase tracking-wider font-semibold">Supervision</p>
+              <p className="text-[10px] text-control-text/75 uppercase tracking-wider font-semibold">{t("dashboardTitle")}</p>
             </div>
           </div>
 
@@ -112,7 +114,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
                   key={tab.key}
                   onClick={() => {
                     setActiveTab(tab.key as typeof activeTab);
-                    setSysLogs((prev) => [...prev, `${new Date().toLocaleTimeString()} • Onglet : ${tab.label}`].slice(-4));
+                    setSysLogs((prev) => [...prev, { time: new Date().toLocaleTimeString(), key: "tabLogged" as TranslationKey, variables: { label: tab.label } }].slice(-4));
                   }}
                   className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
                     isActive
@@ -143,8 +145,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
             </div>
           </div>
 
-          {/* Theme Switcher & Logout */}
+          {/* Language Selector, Theme Switcher & Logout */}
           <div className="flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => setLanguage(language === "fr" ? "en" : "fr")}
+              className="w-full flex items-center justify-between rounded-lg border border-control-border bg-control-panel-light hover:bg-control-panel-light/80 px-3 py-2 text-xs font-bold uppercase tracking-wider text-control-text cursor-pointer transition"
+            >
+              <span className="flex items-center gap-2">
+                <Globe className="h-4 w-4 text-control-cyan" />
+                {language === "fr" ? "Langue: Français" : "Language: English"}
+              </span>
+              <span className="text-[10px] text-control-text/60 font-semibold uppercase">{language}</span>
+            </button>
             <button
               type="button"
               onClick={onToggleTheme}
@@ -152,7 +165,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
             >
               <span className="flex items-center gap-2">
                 {theme === "dark" ? <Sun className="h-4 w-4 text-control-amber" /> : <Moon className="h-4 w-4 text-control-cyan" />}
-                Thème {theme === "dark" ? "Clair" : "Sombre"}
+                {theme === "dark" ? t("themeToggleLightLabel") : t("themeToggleDarkLabel")}
               </span>
             </button>
             <button
@@ -160,7 +173,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
               className="w-full flex items-center gap-2 justify-center rounded-lg border border-control-red/20 bg-control-red/10 px-3 py-2 text-xs font-bold uppercase tracking-wider text-control-red transition hover:bg-control-red/15 cursor-pointer"
             >
               <LogOut className="h-4 w-4" />
-              Déconnexion
+              {t("logoutButton")}
             </button>
           </div>
         </div>
@@ -175,7 +188,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
               {tabs.find(t => t.key === activeTab)?.label}
             </h2>
             <p className="text-[10px] text-control-text/80 uppercase tracking-wider">
-              Console de supervision Wardis
+              {t("headerSubtitle")}
             </p>
           </div>
           
@@ -187,7 +200,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
             
             <div className="flex items-center gap-2 rounded-full border border-control-border bg-control-panel-light px-3 py-1.5 text-xs text-control-text font-bold">
               <span className={`h-2 w-2 rounded-full ${metrics.alerts > 0 ? "bg-control-red animate-pulse" : "bg-control-green"}`} />
-              <span>{metrics.alerts > 0 ? `${metrics.alerts} alerte(s)` : "Système stable"}</span>
+              <span>{metrics.alerts > 0 ? t("activeAlertsCount", { count: metrics.alerts }) : t("systemStable")}</span>
             </div>
           </div>
         </header>
@@ -199,21 +212,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
               <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {/* Stats Card 1 */}
                 <div className="wardis-card p-6">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-control-cyan">Caméras actives</div>
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-control-cyan">{t("activeCameras")}</div>
                   <div className="mt-2 text-3xl font-bold text-control-text-bright">{metrics.activeCameras}</div>
-                  <div className="mt-1 text-xs text-control-text">flux vidéo synchronisés</div>
+                  <div className="mt-1 text-xs text-control-text">{t("camerasSynced")}</div>
                 </div>
                 {/* Stats Card 2 */}
                 <div className="wardis-card p-6">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-control-cyan">Portes</div>
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-control-cyan">{t("doors")}</div>
                   <div className="mt-2 text-3xl font-bold text-control-text-bright">{metrics.openDoors}/{doors.length}</div>
-                  <div className="mt-1 text-xs text-control-text">ouvertes / configurées</div>
+                  <div className="mt-1 text-xs text-control-text">{t("doorsStatusDesc")}</div>
                 </div>
                 {/* Stats Card 3 */}
                 <div className="wardis-card p-6">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-control-cyan">Alertes actives</div>
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-control-cyan">{t("activeAlerts")}</div>
                   <div className="mt-2 text-3xl font-bold text-control-text-bright">{metrics.alerts}</div>
-                  <div className="mt-1 text-xs text-control-text">à acquitter en priorité</div>
+                  <div className="mt-1 text-xs text-control-text">{t("alertsPriority")}</div>
                 </div>
               </section>
 
@@ -221,27 +234,27 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
                 {/* System Health */}
                 <div className="xl:col-span-6 wardis-panel p-6">
                   <div className="flex items-center justify-between border-b border-control-border/60 pb-3 mb-4">
-                     <h3 className="text-sm font-bold text-control-text-bright uppercase tracking-wider">État des services</h3>
+                     <h3 className="text-sm font-bold text-control-text-bright uppercase tracking-wider">{t("serviceStatus")}</h3>
                      <span className="rounded-full border border-control-border bg-control-panel-light px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-control-text">
-                       Latence: {latency}ms
+                       {t("latency", { latency })}
                      </span>
                   </div>
                   <div className="space-y-3.5 text-xs text-control-text">
                     <div className="flex items-center justify-between">
-                      <span>État général du système</span>
-                      <span className="font-semibold text-control-green uppercase tracking-wider text-[10px] bg-control-green/10 border border-control-green/20 px-2 py-0.5 rounded">stable</span>
+                      <span>{t("generalStatus")}</span>
+                      <span className="font-semibold text-control-green uppercase tracking-wider text-[10px] bg-control-green/10 border border-control-green/20 px-2 py-0.5 rounded">{t("statusStable")}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span>Serveur NATS</span>
-                      <span className="font-semibold text-control-green uppercase tracking-wider text-[10px] bg-control-green/10 border border-control-green/20 px-2 py-0.5 rounded">connecté</span>
+                      <span>{t("natsServer")}</span>
+                      <span className="font-semibold text-control-green uppercase tracking-wider text-[10px] bg-control-green/10 border border-control-green/20 px-2 py-0.5 rounded">{t("natsConnected")}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span>Passerelle d'accès</span>
-                      <span className="font-semibold text-control-green uppercase tracking-wider text-[10px] bg-control-green/10 border border-control-green/20 px-2 py-0.5 rounded">en ligne</span>
+                      <span>{t("accessGateway")}</span>
+                      <span className="font-semibold text-control-green uppercase tracking-wider text-[10px] bg-control-green/10 border border-control-green/20 px-2 py-0.5 rounded">{t("gatewayOnline")}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span>Serveur d'enregistrement vidéo</span>
-                      <span className="font-semibold text-control-green uppercase tracking-wider text-[10px] bg-control-green/10 border border-control-green/20 px-2 py-0.5 rounded">actif</span>
+                      <span>{t("videoServer")}</span>
+                      <span className="font-semibold text-control-green uppercase tracking-wider text-[10px] bg-control-green/10 border border-control-green/20 px-2 py-0.5 rounded">{t("serverActive")}</span>
                     </div>
                   </div>
                 </div>
@@ -249,14 +262,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
                 {/* Console logs */}
                 <div className="xl:col-span-6 wardis-panel p-6">
                   <div className="flex items-center justify-between border-b border-control-border/60 pb-3 mb-4">
-                     <h3 className="text-sm font-bold text-control-text-bright uppercase tracking-wider">Journal système</h3>
+                     <h3 className="text-sm font-bold text-control-text-bright uppercase tracking-wider">{t("systemJournal")}</h3>
                      <Terminal className="h-4 w-4 text-control-cyan" />
                   </div>
                   <div className="space-y-2.5 font-mono text-[10px] text-control-text leading-relaxed">
                     {sysLogs.map((log, idx) => (
                       <div key={idx} className="flex items-center gap-2">
-                        <span className="h-1 w-1 rounded-full bg-control-cyan" />
-                        <span>{log}</span>
+                        <span className="h-1.5 w-1.5 rounded-full bg-control-cyan shrink-0" />
+                        <span>{log.time} • {t(log.key, log.variables)}</span>
                       </div>
                     ))}
                   </div>
@@ -276,12 +289,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
         <footer className="border-t border-control-border bg-control-panel px-6 py-3 flex items-center justify-between gap-4 text-xs font-mono select-none shrink-0">
           <div className="flex items-center gap-2 text-[10px] text-control-text">
             <Terminal className="h-3.5 w-3.5 text-control-cyan shrink-0" />
-            <span className="font-bold uppercase tracking-wider">Dernière activité :</span>
-            <span className="truncate max-w-md">{sysLogs[sysLogs.length - 1] || "Console prête"}</span>
+            <span className="font-bold uppercase tracking-wider">{t("lastActivity")}</span>
+            <span className="truncate max-w-md">
+              {sysLogs.length > 0 
+                ? `${sysLogs[sysLogs.length - 1].time} • ${t(sysLogs[sysLogs.length - 1].key, sysLogs[sysLogs.length - 1].variables)}` 
+                : t("dashboardReady")}
+            </span>
           </div>
           <div className="flex items-center gap-2 text-[10px] text-control-text shrink-0">
             <Cpu className="h-3.5 w-3.5 text-control-cyan" />
-            <span>ID OP: {user?.id ? user.id.slice(0, 8) : "00000000"}</span>
+            <span>{t("operatorId", { id: user?.id ? user.id.slice(0, 8) : "00000000" })}</span>
           </div>
         </footer>
       </main>
