@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useCameraStore } from "../store/cameraStore";
-import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { getWhepBaseUrl } from "../store/config";
+import { listen } from "@tauri-apps/api/event";
+import { DetachedHeader } from "./DetachedHeader";
 import { 
   RefreshCw, 
   ShieldAlert, 
-  X, 
   Volume2, 
   VolumeX, 
   Info
@@ -27,6 +27,7 @@ export const DetachedCameraPlayer: React.FC<DetachedCameraPlayerProps> = ({
   const [showTelemetry, setShowTelemetry] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
   const [retryTrigger, setRetryTrigger] = useState(0);
+  const [isHighlighted, setIsHighlighted] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
@@ -53,7 +54,28 @@ export const DetachedCameraPlayer: React.FC<DetachedCameraPlayerProps> = ({
     };
   }, []);
 
-  // WebRTC WHEP Connection & Cleanup Lifecycle (Memory Leak Prevention)
+  // Sync highlight across screens/windows
+  useEffect(() => {
+    let unlistenFn: (() => void) | null = null;
+    const setupListen = async () => {
+      try {
+        unlistenFn = await listen<{ cameraId: string }>("camera-selected", (event) => {
+          if (event.payload.cameraId === cameraId) {
+            setIsHighlighted(true);
+            setTimeout(() => setIsHighlighted(false), 4000);
+          }
+        });
+      } catch (err) {
+        console.error("Failed to setup camera-selected listener:", err);
+      }
+    };
+    setupListen();
+    return () => {
+      if (unlistenFn) unlistenFn();
+    };
+  }, [cameraId]);
+
+  // WebRTC WHEP Connection & Cleanup Lifecycle
   useEffect(() => {
     if (statut !== "active") {
       setStatus("no-signal");
@@ -70,23 +92,19 @@ export const DetachedCameraPlayer: React.FC<DetachedCameraPlayerProps> = ({
         setStatus("connecting");
         setErrorMsg(null);
 
-        // 1. Fetch WHEP JWT Token from server API
         const token = await generateStreamToken(cameraId);
         if (!isComponentMounted) return;
 
-        // 2. Setup RTCPeerConnection
         pc = new RTCPeerConnection({
-          iceServers: [] // Local MediaMTX works without STUN
+          iceServers: []
         });
         pcRef.current = pc;
 
-        // 3. Add transceivers (recvonly)
         pc.addTransceiver("video", { direction: "recvonly" });
         try {
           pc.addTransceiver("audio", { direction: "recvonly" });
         } catch (_) {}
 
-        // 4. Handle track connection
         pc.ontrack = (event) => {
           if (!isComponentMounted) return;
           console.log(`[Detached] WebRTC track received for ${cameraNom}:`, event.track.kind);
@@ -96,7 +114,6 @@ export const DetachedCameraPlayer: React.FC<DetachedCameraPlayerProps> = ({
           }
         };
 
-        // 5. Track connection state changes
         pc.onconnectionstatechange = () => {
           if (!isComponentMounted) return;
           const state = pc?.connectionState;
@@ -115,11 +132,9 @@ export const DetachedCameraPlayer: React.FC<DetachedCameraPlayerProps> = ({
           }
         };
 
-        // 6. Create SDP Offer
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
 
-        // 7. Post SDP Offer to WHEP endpoint on MediaMTX (port 8889)
         const whepUrl = getWhepBaseUrl(cameraId, token || "");
         const response = await window.fetch(whepUrl, {
           method: "POST",
@@ -136,13 +151,11 @@ export const DetachedCameraPlayer: React.FC<DetachedCameraPlayerProps> = ({
         const answerSdp = await response.text();
         if (!isComponentMounted) return;
 
-        // 8. Apply Remote Answer SDP
         await pc.setRemoteDescription(new RTCSessionDescription({
           type: "answer",
           sdp: answerSdp,
         }));
 
-        // Connection Timeout trigger (8 seconds)
         connectionTimeoutId = window.setTimeout(() => {
           if (isComponentMounted && status !== "playing") {
             setStatus("no-signal");
@@ -177,7 +190,6 @@ export const DetachedCameraPlayer: React.FC<DetachedCameraPlayerProps> = ({
 
     startStream();
 
-    // Cleanup function executed on component unmount
     return () => {
       isComponentMounted = false;
       cleanupPeerConnection();
@@ -188,36 +200,22 @@ export const DetachedCameraPlayer: React.FC<DetachedCameraPlayerProps> = ({
     setRetryTrigger(prev => prev + 1);
   };
 
-  const handleCloseWindow = async () => {
-    try {
-      const currentWindow = getCurrentWebviewWindow();
-      await currentWindow.close();
-    } catch (e) {
-      console.error("Failed to close window via Tauri API", e);
-    }
-  };
-
   return (
     <div className="h-screen w-screen bg-black text-control-text font-mono flex flex-col relative overflow-hidden select-none crt-overlay">
-      
-      {/* HUD Telemetry Top Header */}
-      <div className="absolute top-0 left-0 right-0 z-30 bg-gradient-to-b from-control-bg/95 to-transparent p-3 flex items-center justify-between text-xs border-b border-control-border/30">
-        <div className="flex items-center gap-3">
-          <span className={`h-2.5 w-2.5 rounded-full ${
-            status === "playing" ? "bg-control-green animate-pulse" :
-            status === "connecting" ? "bg-control-amber animate-pulse" : "bg-control-red"
-          }`} />
-          <span className="text-control-text-bright font-bold tracking-widest text-[11px] uppercase">
-            DETACHED VIEW // {cameraNom}
-          </span>
-          <span className="text-[9px] px-1.5 py-0.5 bg-control-cyan/10 border border-control-cyan/35 text-control-cyan font-bold tracking-wider">
-            MONITOR {cameraId.substring(0, 8).toUpperCase()}
-          </span>
-        </div>
+      {/* Detached Screen Native Header integration */}
+      <DetachedHeader title={`Wardis Detached Feed // ${cameraNom}`} />
 
-        <div className="flex items-center gap-3">
+      {/* Main Video Stream Frame */}
+      <div className={`flex-1 w-full h-full relative flex items-center justify-center bg-black transition-all duration-300 ${
+        isHighlighted 
+          ? "ring-4 ring-control-cyan ring-inset border-4 border-control-cyan shadow-[0_0_30px_rgba(0,240,255,0.7)]" 
+          : ""
+      }`}>
+        
+        {/* Floating Telemetry & Control Panel */}
+        <div className="absolute top-4 right-4 z-30 flex items-center gap-3">
           {status === "playing" && showTelemetry && (
-            <div className="flex items-center gap-4 text-[10px] text-control-cyan/80 bg-control-panel/75 px-3 py-1 border border-control-border">
+            <div className="flex items-center gap-4 text-[10px] text-control-cyan/80 bg-control-panel/75 px-3 py-1 border border-control-border backdrop-blur-xs">
               <span>{metrics.fps} FPS</span>
               <span className="w-px h-3 bg-control-border/40" />
               <span>{metrics.bitrate} KB/S</span>
@@ -226,47 +224,36 @@ export const DetachedCameraPlayer: React.FC<DetachedCameraPlayerProps> = ({
             </div>
           )}
 
-          {/* Action Toolbar */}
-          <div className="flex items-center gap-1.5">
+          {/* Floating Controls HUD */}
+          <div className="flex items-center gap-1.5 bg-control-panel/75 p-1 border border-control-border backdrop-blur-xs">
             <button
               onClick={() => setShowTelemetry(!showTelemetry)}
-              className={`p-1.5 border transition-all cursor-pointer ${
+              className={`p-1 border transition-all cursor-pointer ${
                 showTelemetry 
                   ? "border-control-cyan bg-control-cyan/10 text-control-cyan" 
-                  : "border-control-border text-control-text hover:text-control-cyan"
+                  : "border-transparent text-control-text hover:text-control-cyan"
               }`}
               title="Toggle HUD Telemetry"
             >
-              <Info className="h-4 w-4" />
+              <Info className="h-3.5 w-3.5" />
             </button>
             <button
               onClick={() => setIsMuted(!isMuted)}
-              className="p-1.5 border border-control-border text-control-text hover:text-control-cyan hover:border-control-cyan transition-all cursor-pointer"
+              className="p-1 border border-transparent text-control-text hover:text-control-cyan transition-all cursor-pointer"
               title={isMuted ? "Unmute Audio" : "Mute Audio"}
             >
-              {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+              {isMuted ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
             </button>
             <button
               onClick={handleRetry}
-              className="p-1.5 border border-control-border text-control-text hover:text-control-cyan hover:border-control-cyan transition-all cursor-pointer"
+              className="p-1 border border-transparent text-control-text hover:text-control-cyan transition-all cursor-pointer"
               title="Force Reconnect Feed"
             >
-              <RefreshCw className="h-4 w-4" />
-            </button>
-            <button
-              onClick={handleCloseWindow}
-              className="p-1.5 border border-control-red/60 bg-control-red/5 text-control-red hover:bg-control-red/25 hover:border-control-red transition-all cursor-pointer font-bold flex items-center gap-1 text-[10px] tracking-wider uppercase ml-2"
-              title="Close Secondary Screen"
-            >
-              <X className="h-4 w-4" />
-              <span className="hidden sm:inline">CLOSE SCREEN</span>
+              <RefreshCw className="h-3.5 w-3.5" />
             </button>
           </div>
         </div>
-      </div>
 
-      {/* Main Video Stream Frame */}
-      <div className="flex-1 w-full h-full relative flex items-center justify-center bg-black">
         {status === "playing" ? (
           <>
             <video
@@ -277,12 +264,12 @@ export const DetachedCameraPlayer: React.FC<DetachedCameraPlayerProps> = ({
               className="w-full h-full object-cover"
             />
             {/* Pulsing visual tag */}
-            <div className="absolute top-16 right-4 bg-control-red/10 border border-control-red text-control-red text-[9px] font-bold px-2 py-0.5 animate-pulse flex items-center gap-1.5 shadow-lg">
+            <div className="absolute top-4 left-4 bg-control-red/10 border border-control-red text-control-red text-[9px] font-bold px-2 py-0.5 animate-pulse flex items-center gap-1.5 shadow-lg">
               <span className="h-1.5 w-1.5 bg-control-red rounded-full animate-ping" />
               <span>LIVE FEED</span>
             </div>
             
-            {/* Futuristic target overlays */}
+            {/* Target overlays */}
             <div className="absolute inset-0 border-[20px] border-transparent border-t-control-cyan/5 border-b-control-cyan/5 pointer-events-none" />
             <div className="absolute top-1/2 left-4 w-6 h-[1px] bg-control-cyan/20 -translate-y-1/2" />
             <div className="absolute top-1/2 right-4 w-6 h-[1px] bg-control-cyan/20 -translate-y-1/2" />
@@ -325,10 +312,10 @@ export const DetachedCameraPlayer: React.FC<DetachedCameraPlayerProps> = ({
       </div>
 
       {/* Screen corners HUD styling decorations */}
-      <div className="absolute bottom-4 left-4 text-[9px] text-control-text/40 pointer-events-none">
+      <div className="absolute bottom-4 left-4 text-[9px] text-control-text/40 pointer-events-none z-30">
         WARDIS SYSTEM v2.0 • MULTI_SCREEN_NODE
       </div>
-      <div className="absolute bottom-4 right-4 text-[9px] text-control-text/40 pointer-events-none">
+      <div className="absolute bottom-4 right-4 text-[9px] text-control-text/40 pointer-events-none z-30">
         LAT: {metrics.latency}ms • SECURE BRIDGE
       </div>
     </div>

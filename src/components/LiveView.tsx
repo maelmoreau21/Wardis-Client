@@ -2,6 +2,8 @@ import React, { useEffect, useState, useRef } from "react";
 import { useCameraStore } from "../store/cameraStore";
 import { useAuthStore } from "../store/authStore";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { listen } from "@tauri-apps/api/event";
+import { registerSpawnedWindow, saveCurrentLayout } from "../store/layoutManager";
 import { getHlsBaseUrl } from "../store/config";
 import { 
   LayoutGrid, 
@@ -63,6 +65,28 @@ const CameraPlayer: React.FC<CameraPlayerProps> = ({
   const generateStreamToken = useCameraStore((state) => state.generateStreamToken);
   const configureWHEPStream = useCameraStore((state) => state.configureWHEPStream);
   const [retryTrigger, setRetryTrigger] = useState(0);
+  const [isHighlighted, setIsHighlighted] = useState(false);
+
+  // Sync highlight across screens/windows
+  useEffect(() => {
+    let unlistenFn: (() => void) | null = null;
+    const setupListen = async () => {
+      try {
+        unlistenFn = await listen<{ cameraId: string }>("camera-selected", (event) => {
+          if (event.payload.cameraId === cameraId) {
+            setIsHighlighted(true);
+            setTimeout(() => setIsHighlighted(false), 4000);
+          }
+        });
+      } catch (err) {
+        console.error("Failed to setup camera-selected listener:", err);
+      }
+    };
+    setupListen();
+    return () => {
+      if (unlistenFn) unlistenFn();
+    };
+  }, [cameraId]);
 
   const handleDetachStream = async () => {
     setShowConfig(false);
@@ -73,15 +97,31 @@ const CameraPlayer: React.FC<CameraPlayerProps> = ({
       if (existing) {
         await existing.setFocus();
       } else {
+        registerSpawnedWindow({
+          label,
+          type: "camera",
+          cameraId,
+          cameraNom,
+          statut
+        });
+
         const webview = new WebviewWindow(label, {
           url: `index.html?detached=true&cameraId=${cameraId}&token=${encodeURIComponent(token || "")}&nom=${encodeURIComponent(cameraNom)}&statut=${statut}`,
           title: `Wardis Live - ${cameraNom}`,
           width: 800,
           height: 600,
         });
+
         webview.once("tauri://created", () => {
-          console.log("Detached window created successfully");
+          webview.listen("tauri://move", () => {
+            saveCurrentLayout();
+          });
+          webview.listen("tauri://resize", () => {
+            saveCurrentLayout();
+          });
+          saveCurrentLayout();
         });
+
         webview.once("tauri://error", (e) => {
           console.error("Failed to create detached window", e);
         });
@@ -324,10 +364,12 @@ const CameraPlayer: React.FC<CameraPlayerProps> = ({
     <div 
       onClick={onClick}
       onDoubleClick={onDoubleClick}
-      className={`relative w-full h-full bg-control-panel flex flex-col border border-control-border rounded-xl overflow-hidden group select-none cursor-pointer transition-all ${
-        isSelected 
-          ? "border-control-cyan shadow-[0_0_15px_rgba(99,102,241,0.25)] z-10" 
-          : "hover:border-control-cyan/45"
+      className={`relative w-full h-full bg-control-panel flex flex-col border rounded-xl overflow-hidden group select-none cursor-pointer transition-all ${
+        isHighlighted
+          ? "border-control-cyan ring-2 ring-control-cyan shadow-[0_0_20px_rgba(0,240,255,0.6)] scale-[1.01] z-20"
+          : isSelected 
+            ? "border-control-cyan shadow-[0_0_15px_rgba(99,102,241,0.25)] z-10" 
+            : "border-control-border hover:border-control-cyan/45"
       }`}
     >
       
@@ -355,6 +397,13 @@ const CameraPlayer: React.FC<CameraPlayerProps> = ({
               <span>{metrics.latency}MS</span>
             </div>
           )}
+          <button 
+            onClick={(e) => { e.stopPropagation(); handleDetachStream(); }}
+            className="p-1 hover:bg-control-cyan/10 border border-transparent hover:border-control-cyan/20 text-control-text hover:text-control-cyan transition-all"
+            title="Détacher le flux"
+          >
+            <ExternalLink className="h-3 w-3" />
+          </button>
           <button 
             onClick={() => setShowConfig(!showConfig)}
             className="p-1 hover:bg-control-cyan/10 border border-transparent hover:border-control-cyan/20 text-control-text hover:text-control-cyan transition-all"

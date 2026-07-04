@@ -1,7 +1,10 @@
 import React, { useState } from "react";
-import { X, Plus, type LucideIcon } from "lucide-react";
+import { X, Plus, ExternalLink, type LucideIcon } from "lucide-react";
 import { type TranslationKey } from "../../store/languageStore";
 import { type TabType } from "../../store/workspaceStore";
+import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { useAuthStore } from "../../store/authStore";
+import { registerSpawnedWindow, saveCurrentLayout } from "../../store/layoutManager";
 
 interface TabItem {
   id: string;
@@ -86,6 +89,45 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
               >
                 {TabIcon && <TabIcon className="h-3 w-3 shrink-0 pointer-events-none" />}
                 <span className="pointer-events-none">{t(tab.title)}</span>
+                
+                {/* Detach Tab Button */}
+                <button
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    const token = useAuthStore.getState().token;
+                    const label = `detached-tab-${tab.type}-${Date.now()}`;
+                    try {
+                      registerSpawnedWindow({
+                        label,
+                        type: "tab",
+                        tabType: tab.type
+                      });
+                      const webview = new WebviewWindow(label, {
+                        url: `index.html?detached=true&tabType=${tab.type}&token=${encodeURIComponent(token || "")}`,
+                        title: `Wardis Workspace - ${t(tab.title)}`,
+                        width: 1024,
+                        height: 768,
+                      });
+                      
+                      webview.once("tauri://created", () => {
+                        webview.listen("tauri://move", () => {
+                          saveCurrentLayout();
+                        });
+                        webview.listen("tauri://resize", () => {
+                          saveCurrentLayout();
+                        });
+                        saveCurrentLayout();
+                      });
+                    } catch (err) {
+                      console.error("Failed to detach tab:", err);
+                    }
+                  }}
+                  className="hover:bg-black/20 rounded p-0.5 ml-1 transition cursor-pointer text-control-text hover:text-control-cyan"
+                  title="Détacher cet onglet dans une nouvelle fenêtre"
+                >
+                  <ExternalLink className="h-2.5 w-2.5" />
+                </button>
+
                 {tab.closable && (
                   <button
                     onClick={(e) => {

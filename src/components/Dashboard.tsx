@@ -215,13 +215,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
                     <div className="text-[10px] text-control-text/40 italic">No cameras.</div>
                   ) : (
                     cameras.map(cam => (
-                      <div key={cam.id} className="flex items-center justify-between text-[10px] hover:text-control-text-bright py-0.5">
+                      <button 
+                        key={cam.id} 
+                        onClick={async () => {
+                          const { emit } = await import("@tauri-apps/api/event");
+                          await emit("camera-selected", { cameraId: cam.id });
+                        }}
+                        className="w-full flex items-center justify-between text-[10px] text-control-text hover:text-control-text-bright hover:bg-control-panel-light/30 px-1 py-0.5 rounded text-left transition cursor-pointer"
+                      >
                         <span className="truncate flex items-center gap-1.5">
                           <span className={`h-1.5 w-1.5 rounded-full ${cam.statut === "active" ? "bg-control-green" : "bg-control-red"}`} />
                           {cam.nom}
                         </span>
                         <span className="text-[8px] text-control-text/40">{cam.ptz_supported ? "PTZ" : ""}</span>
-                      </div>
+                      </button>
                     ))
                   )}
                 </div>
