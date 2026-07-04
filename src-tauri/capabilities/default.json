@@ -3,11 +3,13 @@
   "identifier": "default",
   "description": "Capability for the main window",
   "windows": [
-    "main"
+    "main",
+    "detached-*"
   ],
   "permissions": [
     "core:default",
     "opener:default",
+    "core:webview:allow-create-webview-window",
     {
       "identifier": "http:allow-request",
       "allow": [{ "url": "http://localhost:8080/*" }]

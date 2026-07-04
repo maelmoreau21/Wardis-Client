@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useAuthStore } from "../store/authStore";
-import { LogOut, Radio, Terminal, Cpu, Clock, LayoutGrid, ShieldAlert } from "lucide-react";
+import { LogOut, Radio, Terminal, Cpu, Clock, LayoutGrid, ShieldAlert, Map } from "lucide-react";
 import { LiveView } from "./LiveView";
 import { useCameraStore } from "../store/cameraStore";
 import { AccessControl } from "./AccessControl";
@@ -8,6 +8,7 @@ import { useAccessControlStore } from "../store/accessControlStore";
 import { Alarms } from "./Alarms";
 import { useAlarmStore } from "../store/alarmStore";
 import { Events } from "./Events";
+import { InteractiveMap } from "./InteractiveMap";
 
 export const Dashboard: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -17,7 +18,7 @@ export const Dashboard: React.FC = () => {
   const [time, setTime] = useState(new Date());
   const [sysLogs, setSysLogs] = useState<string[]>([]);
   const [latency, setLatency] = useState(12);
-  const [activeTab, setActiveTab] = useState<"status" | "live" | "access" | "alarms" | "events">("status");
+  const [activeTab, setActiveTab] = useState<"status" | "live" | "access" | "alarms" | "events" | "map">("status");
 
   // Connect real-time alarms SSE stream
   useEffect(() => {
@@ -239,6 +240,20 @@ export const Dashboard: React.FC = () => {
             <Radio className="h-3.5 w-3.5 text-control-cyan" />
             <span>Events Correlation</span>
           </button>
+          <button
+            onClick={() => {
+              setActiveTab("map");
+              setSysLogs((prev) => [...prev, `[${new Date().toLocaleTimeString()}] Navigated to: Interactive Cartography Map`].slice(-4));
+            }}
+            className={`px-4 py-2 border-t border-x transition-all uppercase tracking-wider font-bold cursor-pointer flex items-center gap-2 ${
+              activeTab === "map"
+                ? "border-control-cyan text-control-cyan bg-control-panel/20"
+                : "border-transparent text-control-text/60 hover:text-control-text hover:bg-control-panel-light/35"
+            }`}
+          >
+            <Map className="h-3.5 w-3.5 text-control-cyan" />
+            <span>Cartographie</span>
+          </button>
         </div>
 
         {/* Central Workspace (Tab rendering) */}
@@ -270,6 +285,7 @@ export const Dashboard: React.FC = () => {
         {activeTab === "access" && <AccessControl />}
         {activeTab === "alarms" && <Alarms />}
         {activeTab === "events" && <Events />}
+        {activeTab === "map" && <InteractiveMap />}
 
         {/* Bottom system logs terminal bar */}
         <div className="bg-control-panel border border-control-border p-3 flex flex-col md:flex-row items-stretch md:items-center gap-3">

@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useCameraStore } from "../store/cameraStore";
+import { useAuthStore } from "../store/authStore";
+import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { 
   LayoutGrid, 
   RefreshCw, 
@@ -7,7 +9,8 @@ import {
   Plus, 
   Trash2, 
   ShieldAlert,
-  Settings
+  Settings,
+  ExternalLink
 } from "lucide-react";
 
 // Standard Site Name Mapping
@@ -38,6 +41,33 @@ const CameraPlayer: React.FC<CameraPlayerProps> = ({ cameraId, cameraNom, statut
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const generateStreamToken = useCameraStore((state) => state.generateStreamToken);
   const [retryTrigger, setRetryTrigger] = useState(0);
+
+  const handleDetachStream = async () => {
+    setShowConfig(false);
+    const token = useAuthStore.getState().token;
+    const label = `detached-cam-${cameraId}`;
+    try {
+      const existing = await WebviewWindow.getByLabel(label);
+      if (existing) {
+        await existing.setFocus();
+      } else {
+        const webview = new WebviewWindow(label, {
+          url: `index.html?detached=true&cameraId=${cameraId}&token=${encodeURIComponent(token || "")}&nom=${encodeURIComponent(cameraNom)}&statut=${statut}`,
+          title: `Wardis Live - ${cameraNom}`,
+          width: 800,
+          height: 600,
+        });
+        webview.once("tauri://created", () => {
+          console.log("Detached window created successfully");
+        });
+        webview.once("tauri://error", (e) => {
+          console.error("Failed to create detached window", e);
+        });
+      }
+    } catch (error) {
+      console.error("Error managing detached window:", error);
+    }
+  };
 
   // Simulated metrics
   const [metrics, setMetrics] = useState({ fps: 30, bitrate: 2150, latency: 120 });
@@ -228,6 +258,13 @@ const CameraPlayer: React.FC<CameraPlayerProps> = ({ cameraId, cameraNom, statut
               className="py-1.5 border border-control-cyan/50 hover:bg-control-cyan/10 text-control-cyan text-[10px] uppercase font-bold tracking-wider"
             >
               Force Reconnect
+            </button>
+            <button
+              onClick={handleDetachStream}
+              className="py-1.5 border border-control-cyan/50 hover:bg-control-cyan/10 text-control-cyan text-[10px] uppercase font-bold tracking-wider flex items-center justify-center gap-1.5"
+            >
+              <ExternalLink className="h-3 w-3" />
+              Détacher le flux
             </button>
             <button
               onClick={() => { onClear(); setShowConfig(false); }}
