@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { fetch } from "@tauri-apps/plugin-http";
 import { useAuthStore } from "./authStore";
+import { getApiBase } from "./config";
 
 export interface Door {
   id: string;
@@ -35,8 +36,6 @@ interface AccessControlState {
   clearError: () => void;
 }
 
-const API_BASE = "http://localhost:8080";
-
 export const useAccessControlStore = create<AccessControlState>((set, get) => ({
   doors: [],
   logs: [],
@@ -47,7 +46,7 @@ export const useAccessControlStore = create<AccessControlState>((set, get) => ({
     set({ loading: true, error: null });
     const token = useAuthStore.getState().token;
     try {
-      const response = await fetch(`${API_BASE}/doors`, {
+      const response = await fetch(`${getApiBase()}/doors`, {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -69,7 +68,7 @@ export const useAccessControlStore = create<AccessControlState>((set, get) => ({
     set({ loading: true, error: null });
     const token = useAuthStore.getState().token;
     try {
-      const response = await fetch(`${API_BASE}/doors/${doorId}/open`, {
+      const response = await fetch(`${getApiBase()}/doors/${doorId}/open`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -96,7 +95,7 @@ export const useAccessControlStore = create<AccessControlState>((set, get) => ({
     set({ loading: true, error: null });
     const token = useAuthStore.getState().token;
     try {
-      const response = await fetch(`${API_BASE}/doors/${doorId}/close`, {
+      const response = await fetch(`${getApiBase()}/doors/${doorId}/close`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -123,7 +122,7 @@ export const useAccessControlStore = create<AccessControlState>((set, get) => ({
     set({ loading: true, error: null });
     const token = useAuthStore.getState().token;
     try {
-      const response = await fetch(`${API_BASE}/access-logs`, {
+      const response = await fetch(`${getApiBase()}/access-logs`, {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${token}`,

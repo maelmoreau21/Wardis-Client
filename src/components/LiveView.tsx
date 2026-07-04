@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useCameraStore } from "../store/cameraStore";
 import { useAuthStore } from "../store/authStore";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { getHlsBaseUrl } from "../store/config";
 import { 
   LayoutGrid, 
   RefreshCw, 
@@ -146,7 +147,7 @@ const CameraPlayer: React.FC<CameraPlayerProps> = ({
           const token = await generateStreamToken(cameraId);
           if (!active) return;
 
-          const hlsUrl = `http://localhost:8888/${cameraId}/index.m3u8?token=${token}`;
+          const hlsUrl = getHlsBaseUrl(cameraId, token);
           const Hls = await loadHlsScript();
           if (!active) return;
 

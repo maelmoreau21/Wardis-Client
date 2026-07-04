@@ -9,6 +9,7 @@ interface LoginProps {
 
 export const Login: React.FC<LoginProps> = ({ theme, onToggleTheme }) => {
   const { login, loading, error, clearError } = useAuthStore();
+  const [serverUrl, setServerUrl] = useState(() => localStorage.getItem("wardis-server-url") || "http://localhost:8080");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -33,11 +34,11 @@ export const Login: React.FC<LoginProps> = ({ theme, onToggleTheme }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) return;
+    if (!email || !password || !serverUrl) return;
 
-    setLogs((prev) => [...prev, `${new Date().toLocaleTimeString()} • Authentification demandée`, `${new Date().toLocaleTimeString()} • Vérification en cours...`]);
+    setLogs((prev) => [...prev, `${new Date().toLocaleTimeString()} • Authentification demandée`, `${new Date().toLocaleTimeString()} • Connexion au serveur...`]);
 
-    const success = await login(email, password);
+    const success = await login(serverUrl, email, password);
 
     if (success) {
       setLogs((prev) => [...prev, `${new Date().toLocaleTimeString()} • Session validée`, `${new Date().toLocaleTimeString()} • Ouverture du tableau de bord...`]);
@@ -154,6 +155,20 @@ export const Login: React.FC<LoginProps> = ({ theme, onToggleTheme }) => {
             )}
 
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+              <div>
+                <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-control-cyan">
+                  Adresse du serveur
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={serverUrl}
+                  onChange={(e) => setServerUrl(e.target.value)}
+                  placeholder="http://localhost:8080"
+                  className="wardis-input w-full px-3 py-2.5 text-sm outline-none transition focus:border-control-cyan"
+                />
+              </div>
+
               <div>
                 <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-control-cyan">
                   Adresse e-mail

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useCameraStore } from "../store/cameraStore";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { getWhepBaseUrl } from "../store/config";
 import { 
   RefreshCw, 
   ShieldAlert, 
@@ -119,7 +120,7 @@ export const DetachedCameraPlayer: React.FC<DetachedCameraPlayerProps> = ({
         await pc.setLocalDescription(offer);
 
         // 7. Post SDP Offer to WHEP endpoint on MediaMTX (port 8889)
-        const whepUrl = `http://localhost:8889/${cameraId}/whep?token=${token}`;
+        const whepUrl = getWhepBaseUrl(cameraId, token || "");
         const response = await window.fetch(whepUrl, {
           method: "POST",
           headers: {

@@ -4,6 +4,7 @@ import { useAccessControlStore, Door } from "../store/accessControlStore";
 import { useAlarmStore } from "../store/alarmStore";
 import { useAuthStore } from "../store/authStore";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { getWhepBaseUrl } from "../store/config";
 import { 
   Video, 
   DoorClosed, 
@@ -82,7 +83,7 @@ const MiniPlayer: React.FC<MiniPlayerProps> = ({ cameraId, statut }) => {
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
 
-        const whepUrl = `http://localhost:8889/${cameraId}/whep?token=${token}`;
+        const whepUrl = getWhepBaseUrl(cameraId, token);
         const response = await window.fetch(whepUrl, {
           method: "POST",
           headers: { "Content-Type": "application/sdp" },

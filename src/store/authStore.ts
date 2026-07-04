@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { fetch } from "@tauri-apps/plugin-http";
+import { getApiBase } from "./config";
 
 interface UserProfile {
   id: string;
@@ -15,12 +16,10 @@ interface AuthState {
   loading: boolean;
   error: string | null;
   initialize: () => void;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (serverUrl: string, email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   clearError: () => void;
 }
-
-const API_BASE = "http://localhost:8080";
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   token: null,
@@ -45,11 +44,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  login: async (email, password) => {
+  login: async (serverUrl, email, password) => {
     set({ loading: true, error: null });
+    
+    if (serverUrl.trim()) {
+      localStorage.setItem("wardis-server-url", serverUrl.trim());
+    }
+
     try {
+      const apiBase = getApiBase();
       // 1. Post to login endpoint
-      const response = await fetch(`${API_BASE}/login`, {
+      const response = await fetch(`${apiBase}/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -72,7 +77,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const token = loginData.token;
 
       // 2. Fetch user profile from /me
-      const profileResponse = await fetch(`${API_BASE}/me`, {
+      const profileResponse = await fetch(`${apiBase}/me`, {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -113,10 +118,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   logout: async () => {
     set({ loading: true });
     const currentToken = get().token;
+    const apiBase = getApiBase();
     try {
       if (currentToken) {
         // Attempt logout call to backend
-        await fetch(`${API_BASE}/logout`, {
+        await fetch(`${apiBase}/logout`, {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${currentToken}`,

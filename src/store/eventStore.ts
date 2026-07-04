@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { fetch } from "@tauri-apps/plugin-http";
 import { useAuthStore } from "./authStore";
+import { getApiBase } from "./config";
 
 export interface CorrelatedEvent {
   id: string;
@@ -26,7 +27,6 @@ interface EventState {
   clearError: () => void;
 }
 
-const API_BASE = "http://localhost:8080";
 let eventSource: EventSource | null = null;
 
 export const useEventStore = create<EventState>((set) => ({
@@ -39,7 +39,7 @@ export const useEventStore = create<EventState>((set) => ({
     set({ loading: true, error: null });
     const token = useAuthStore.getState().token;
     try {
-      const response = await fetch(`${API_BASE}/events`, {
+      const response = await fetch(`${getApiBase()}/events`, {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -64,7 +64,7 @@ export const useEventStore = create<EventState>((set) => ({
     if (!token) return;
     if (eventSource) return;
 
-    const url = `${API_BASE}/events/stream?token=${encodeURIComponent(token)}`;
+    const url = `${getApiBase()}/events/stream?token=${encodeURIComponent(token)}`;
     eventSource = new EventSource(url);
     set({ sseConnected: true });
 

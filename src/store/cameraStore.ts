@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { fetch } from "@tauri-apps/plugin-http";
 import { useAuthStore } from "./authStore";
+import { getApiBase } from "./config";
 
 export interface Camera {
   id: string;
@@ -23,8 +24,6 @@ interface CameraState {
   sendPTZCommand: (cameraId: string, pan: number, tilt: number, zoom: number) => Promise<void>;
 }
 
-const API_BASE = "http://localhost:8080";
-
 export const useCameraStore = create<CameraState>((set) => ({
   cameras: [],
   loading: false,
@@ -34,7 +33,7 @@ export const useCameraStore = create<CameraState>((set) => ({
     set({ loading: true, error: null });
     const token = useAuthStore.getState().token;
     try {
-      const response = await fetch(`${API_BASE}/cameras`, {
+      const response = await fetch(`${getApiBase()}/cameras`, {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -54,7 +53,7 @@ export const useCameraStore = create<CameraState>((set) => ({
 
   generateStreamToken: async (cameraId: string) => {
     const token = useAuthStore.getState().token;
-    const response = await fetch(`${API_BASE}/cameras/${cameraId}/token`, {
+    const response = await fetch(`${getApiBase()}/cameras/${cameraId}/token`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${token}`,
@@ -71,7 +70,7 @@ export const useCameraStore = create<CameraState>((set) => ({
 
   configureWHEPStream: async (cameraId: string) => {
     const token = useAuthStore.getState().token;
-    const response = await fetch(`${API_BASE}/cameras/${cameraId}/whep`, {
+    const response = await fetch(`${getApiBase()}/cameras/${cameraId}/whep`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${token}`,
@@ -89,7 +88,7 @@ export const useCameraStore = create<CameraState>((set) => ({
   sendPTZCommand: async (cameraId: string, pan: number, tilt: number, zoom: number) => {
     const token = useAuthStore.getState().token;
     try {
-      const response = await fetch(`${API_BASE}/cameras/${cameraId}/ptz`, {
+      const response = await fetch(`${getApiBase()}/cameras/${cameraId}/ptz`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { fetch } from "@tauri-apps/plugin-http";
 import { useAuthStore } from "./authStore";
+import { getApiBase } from "./config";
 
 export interface Zone {
   id: string;
@@ -59,7 +60,7 @@ interface AlarmState {
   clearError: () => void;
 }
 
-const API_BASE = "http://localhost:8080";
+const getApiUrl = () => getApiBase();
 
 let eventSource: EventSource | null = null;
 
@@ -122,7 +123,7 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
     set({ loading: true, error: null });
     const token = useAuthStore.getState().token;
     try {
-      const response = await fetch(`${API_BASE}/zones`, {
+      const response = await fetch(`${getApiUrl()}/zones`, {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -142,7 +143,7 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
     set({ loading: true, error: null });
     const token = useAuthStore.getState().token;
     try {
-      const response = await fetch(`${API_BASE}/capteurs`, {
+      const response = await fetch(`${getApiUrl()}/capteurs`, {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -162,7 +163,7 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
     set({ loading: true, error: null });
     const token = useAuthStore.getState().token;
     try {
-      const response = await fetch(`${API_BASE}/alarmes/active`, {
+      const response = await fetch(`${getApiUrl()}/alarmes/active`, {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -182,7 +183,7 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
     set({ loading: true, error: null });
     const token = useAuthStore.getState().token;
     try {
-      const response = await fetch(`${API_BASE}/zones/${zoneId}/arm`, {
+      const response = await fetch(`${getApiUrl()}/zones/${zoneId}/arm`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -206,7 +207,7 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
     set({ loading: true, error: null });
     const token = useAuthStore.getState().token;
     try {
-      const response = await fetch(`${API_BASE}/zones/${zoneId}/disarm`, {
+      const response = await fetch(`${getApiUrl()}/zones/${zoneId}/disarm`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -234,7 +235,7 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
     set({ loading: true, error: null });
     const token = useAuthStore.getState().token;
     try {
-      const response = await fetch(`${API_BASE}/capteurs/${sensorId}/trigger`, {
+      const response = await fetch(`${getApiUrl()}/capteurs/${sensorId}/trigger`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -296,7 +297,7 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
     if (!token) return;
     if (eventSource) return;
 
-    const url = `${API_BASE}/events/stream?token=${encodeURIComponent(token)}`;
+    const url = `${getApiUrl()}/events/stream?token=${encodeURIComponent(token)}`;
     eventSource = new EventSource(url);
     set({ sseConnected: true });
 
