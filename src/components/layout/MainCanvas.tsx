@@ -68,8 +68,8 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-control-bg">
       {/* Tab Strip */}
-      <div className="h-9 flex items-center bg-control-panel border-b border-control-border px-3 gap-1 shrink-0 select-none overflow-x-auto relative z-20">
-        <div className="flex items-center gap-1 flex-1 overflow-x-auto">
+      <div className="h-11 flex items-center bg-control-panel border-b border-control-border px-3 gap-1.5 shrink-0 select-none overflow-x-auto relative z-20">
+        <div className="flex items-center gap-1.5 flex-1 overflow-x-auto">
           {tabs.map((tab, idx) => {
             const TabIcon = getTabIcon(tab.type);
             const isActive = tab.id === activeTabId;
@@ -81,10 +81,10 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
                 onDragStart={(e) => handleDragStart(e, idx)}
                 onDragOver={(e) => handleDragOver(e, idx)}
                 onDragEnd={handleDragEnd}
-                className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider cursor-grab active:cursor-grabbing transition border duration-150 shrink-0 h-7 ${
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium cursor-grab active:cursor-grabbing transition-all duration-150 shrink-0 h-8 ${
                   isActive
-                    ? "bg-control-cyan/15 border-control-cyan text-control-cyan"
-                    : "bg-control-panel-light/40 border-control-border text-control-text hover:text-control-text-bright hover:bg-control-panel-light/60"
+                    ? "bg-control-cyan/15 text-control-cyan"
+                    : "text-control-text hover:text-control-text-bright hover:bg-control-panel-light/70"
                 }`}
               >
                 {TabIcon && <TabIcon className="h-3 w-3 shrink-0 pointer-events-none" />}
@@ -147,16 +147,16 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
           <div className="relative">
             <button
               onClick={() => setShowMenu(!showMenu)}
-              className="h-7 w-7 flex items-center justify-center rounded border border-control-border bg-control-panel-light/40 hover:bg-control-panel-light text-control-text-bright cursor-pointer transition"
+              className="h-8 w-8 flex items-center justify-center rounded-lg bg-control-panel-light hover:bg-control-panel-light/80 text-control-text hover:text-control-text-bright cursor-pointer transition-all"
             >
-              <Plus className="h-3.5 w-3.5" />
+              <Plus className="h-4 w-4" />
             </button>
 
             {showMenu && (
               <>
                 <div className="fixed inset-0 z-30" onClick={() => setShowMenu(false)} />
-                <div className="absolute left-0 mt-1 w-52 rounded bg-control-panel border border-control-border shadow-xl p-1 z-40 flex flex-col gap-0.5">
-                  <p className="text-[8px] uppercase tracking-wider font-bold text-control-text/60 px-2 py-1 border-b border-control-border/50 mb-1">
+                <div className="absolute left-0 mt-2 w-56 rounded-xl bg-control-panel border border-control-border shadow-xl p-1.5 z-40 flex flex-col gap-0.5">
+                  <p className="text-[11px] font-semibold text-control-text/60 px-3 py-1.5 border-b border-control-border/50 mb-1">
                     {t("taskMenuTitle")}
                   </p>
                   {addTabLinks.map((link) => {
@@ -168,9 +168,9 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
                           onAddTabClick(link.type, link.labelKey as string);
                           setShowMenu(false);
                         }}
-                        className="flex items-center gap-2 w-full rounded px-2 py-1.5 text-[10px] text-left font-bold uppercase tracking-wider hover:bg-control-panel-light hover:text-control-text-bright text-control-text transition cursor-pointer"
+                        className="flex items-center gap-2.5 w-full rounded-lg px-3 py-2 text-sm text-left font-medium hover:bg-control-panel-light hover:text-control-text-bright text-control-text transition-colors cursor-pointer"
                       >
-                        <Icon className="h-3.5 w-3.5 text-control-cyan shrink-0" />
+                        <Icon className="h-4 w-4 text-control-cyan shrink-0" />
                         {t(link.labelKey)}
                       </button>
                     );

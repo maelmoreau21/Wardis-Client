@@ -59,16 +59,16 @@ export const ContextPanel: React.FC<ContextPanelProps> = ({
         {/* Panel Header */}
         {!isCollapsed && (
           <>
-            <div className="h-9 px-3 flex items-center justify-between border-b border-control-border bg-control-panel-light/30 shrink-0">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-control-text-bright">
+            <div className="h-10 px-4 flex items-center justify-between border-b border-control-border shrink-0">
+              <span className="text-xs font-semibold text-control-text-bright">
                 {title}
               </span>
               <button
                 onClick={() => setIsCollapsed(true)}
-                className="p-1 rounded hover:bg-control-panel-light text-control-text hover:text-control-text-bright cursor-pointer"
-                title="Collapse Panel"
+                className="p-1.5 rounded-lg hover:bg-control-panel-light text-control-text hover:text-control-text-bright cursor-pointer transition-colors"
+                title="Réduire le panneau"
               >
-                <ChevronLeft className="h-3.5 w-3.5" />
+                <ChevronLeft className="h-4 w-4" />
               </button>
             </div>
 
@@ -84,15 +84,15 @@ export const ContextPanel: React.FC<ContextPanelProps> = ({
       {!isCollapsed ? (
         <div
           onMouseDown={startResize}
-          className="w-1.5 hover:w-2 bg-transparent hover:bg-control-cyan/40 cursor-col-resize transition-all duration-150 z-20"
+          className="w-1.5 hover:w-2 bg-transparent hover:bg-control-cyan/30 cursor-col-resize transition-all duration-150 z-20"
         />
       ) : (
         <button
           onClick={() => setIsCollapsed(false)}
-          className="absolute left-0 top-1/2 -translate-y-1/2 bg-control-panel border-y border-r border-control-border hover:bg-control-panel-light text-control-text hover:text-control-text-bright py-3 px-0.5 rounded-r cursor-pointer z-30 shadow-md"
-          title="Expand Panel"
+          className="absolute left-0 top-1/2 -translate-y-1/2 bg-control-panel border-y border-r border-control-border hover:bg-control-panel-light text-control-text hover:text-control-text-bright py-4 px-1 rounded-r-lg cursor-pointer z-30 shadow-md transition-colors"
+          title="Agrandir le panneau"
         >
-          <ChevronRight className="h-3.5 w-3.5" />
+          <ChevronRight className="h-4 w-4" />
         </button>
       )}
     </div>

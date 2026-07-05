@@ -1,5 +1,5 @@
 import React from "react";
-import { Sparkles, Clock, Bell, LogOut, Settings } from "lucide-react";
+import { Shield, Clock, Bell, LogOut, Settings, ChevronDown } from "lucide-react";
 
 interface TopBarProps {
   title: string;
@@ -27,59 +27,67 @@ export const TopBar: React.FC<TopBarProps> = ({
   t
 }) => {
   return (
-    <header className="h-12 border-b border-control-border bg-control-panel flex items-center justify-between px-4 shrink-0 select-none z-30">
+    <header className="h-14 border-b border-control-border bg-control-panel flex items-center justify-between px-5 shrink-0 select-none z-30 shadow-sm">
       {/* Brand & Module Title */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded bg-control-cyan text-white shadow-sm shadow-control-cyan/20">
-            <Sparkles className="h-4 w-4" />
+      <div className="flex items-center gap-5">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-control-cyan text-white shadow-md shadow-control-cyan/25">
+            <Shield className="h-4 w-4" />
           </div>
-          <div>
-            <span className="text-sm font-bold text-control-text-bright tracking-tight">Wardis</span>
-            <span className="ml-1.5 rounded border border-control-border/40 bg-control-cyan/10 px-1 py-0.5 text-[8px] font-bold text-control-cyan uppercase tracking-wider">
-              v0.0.1
-            </span>
+          <div className="flex flex-col leading-none">
+            <span className="text-sm font-bold text-control-text-bright">Wardis</span>
+            <span className="text-[10px] text-control-text/60 font-medium">Security Suite</span>
           </div>
         </div>
 
-        <div className="h-4 w-[1px] bg-control-border" />
+        {/* Separator */}
+        <div className="h-6 w-px bg-control-border" />
 
-        <div className="flex flex-col">
-          <span className="text-xs font-bold text-control-text-bright uppercase tracking-wider">{title}</span>
-          {subtitle && <span className="text-[9px] text-control-text/60 uppercase tracking-widest">{subtitle}</span>}
+        {/* Module Title */}
+        <div className="flex flex-col leading-none">
+          <span className="text-sm font-semibold text-control-text-bright">{title}</span>
+          {subtitle && (
+            <span className="text-[11px] text-control-text/60 mt-0.5">{subtitle}</span>
+          )}
         </div>
       </div>
 
-      {/* Control Room Telemetry & User controls */}
-      <div className="flex items-center gap-3">
-        {/* Connection status */}
-        <div className="flex items-center gap-2 rounded border border-control-border bg-control-panel-light/40 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-control-text">
+      {/* Right side: status chips + user */}
+      <div className="flex items-center gap-2">
+        {/* Connection status pill */}
+        <div className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ${
+          connectionStatus === "online"
+            ? "bg-control-green/10 text-control-green"
+            : connectionStatus === "offline"
+            ? "bg-control-red/10 text-control-red"
+            : "bg-control-amber/10 text-control-amber"
+        }`}>
           <span className={`h-1.5 w-1.5 rounded-full ${
-            connectionStatus === "online" 
-              ? "bg-control-green" 
+            connectionStatus === "online"
+              ? "bg-control-green"
               : connectionStatus === "offline"
               ? "bg-control-red"
               : "bg-control-amber animate-pulse"
           }`} />
-          <span>{connectionStatus === "online" ? t("statusStable") : t("connectionLost")}</span>
+          <span>{connectionStatus === "online" ? t("statusStable") : connectionStatus === "checking" ? "…" : t("connectionLost")}</span>
         </div>
 
         {/* Server Clock */}
-        <div className="flex items-center gap-2 rounded border border-control-border bg-control-panel-light/40 px-2.5 py-1 text-[11px] font-bold text-control-text">
+        <div className="flex items-center gap-1.5 rounded-full bg-control-panel-light px-3 py-1.5 text-xs font-medium text-control-text">
           <Clock className="h-3.5 w-3.5 text-control-cyan" />
-          <span className="font-mono">{serverTime}</span>
+          <span className="font-mono tabular-nums">{serverTime}</span>
         </div>
 
-        {/* Alarm Notification Bell */}
+        {/* Alarm Bell */}
         <div className="relative">
-          <button 
-            className="flex items-center justify-center h-8 w-8 rounded border border-control-border bg-control-panel-light hover:bg-control-panel-light/80 text-control-text hover:text-control-text-bright cursor-pointer transition"
+          <button
+            className="relative flex h-9 w-9 items-center justify-center rounded-full bg-control-panel-light hover:bg-control-panel text-control-text hover:text-control-text-bright cursor-pointer transition-all duration-150"
             title="Notifications"
           >
-            <Bell className="h-4 w-4" />
+            <Bell className="h-4.5 w-4.5 h-[18px] w-[18px]" />
             {activeAlarmsCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-control-red text-[9px] font-bold text-white animate-pulse">
-                {activeAlarmsCount}
+              <span className="absolute -top-0.5 -right-0.5 flex h-4.5 h-[18px] w-[18px] items-center justify-center rounded-full bg-control-red text-[9px] font-bold text-white border-2 border-control-panel">
+                {activeAlarmsCount > 99 ? "99+" : activeAlarmsCount}
               </span>
             )}
           </button>
@@ -87,30 +95,33 @@ export const TopBar: React.FC<TopBarProps> = ({
 
         {/* User Menu */}
         <div className="relative group">
-          <button className="flex items-center gap-2 rounded border border-control-border bg-control-panel-light hover:bg-control-panel-light/85 px-2 py-1 cursor-pointer transition text-control-text hover:text-control-text-bright">
-            <div className="h-6 w-6 rounded-full bg-control-cyan/15 flex items-center justify-center font-bold text-control-cyan text-[10px]">
+          <button className="flex items-center gap-2 rounded-full bg-control-panel-light hover:bg-control-panel px-3 py-1.5 cursor-pointer transition-all duration-150 text-control-text hover:text-control-text-bright">
+            {/* Avatar */}
+            <div className="h-7 w-7 rounded-full bg-control-cyan/20 flex items-center justify-center font-semibold text-control-cyan text-xs">
               {userName.substring(0, 2).toUpperCase()}
             </div>
-            <span className="text-[11px] font-bold uppercase tracking-wider max-w-[80px] truncate">{userName}</span>
+            <span className="text-xs font-semibold max-w-[96px] truncate">{userName}</span>
+            <ChevronDown className="h-3.5 w-3.5 opacity-50 shrink-0" />
           </button>
 
-          {/* User Menu Dropdown */}
-          <div className="absolute right-0 mt-1 w-44 bg-control-panel border border-control-border rounded shadow-xl py-1 hidden group-hover:block hover:block z-40">
-            <div className="px-3 py-1.5 border-b border-control-border/60 text-[10px] text-control-text/60 uppercase font-bold tracking-wider">
-              {userRole}
+          {/* Dropdown */}
+          <div className="absolute right-0 mt-2 w-48 bg-control-panel border border-control-border rounded-xl shadow-xl py-1.5 hidden group-hover:block hover:block z-50 overflow-hidden">
+            <div className="px-4 py-2 border-b border-control-border/50">
+              <p className="text-xs font-semibold text-control-text-bright truncate">{userName}</p>
+              <p className="text-[11px] text-control-text/60 mt-0.5 capitalize">{userRole}</p>
             </div>
-            <button 
+            <button
               onClick={onOpenSettings}
-              className="w-full text-left px-3 py-2 text-xs text-control-text hover:text-control-text-bright hover:bg-control-panel-light flex items-center gap-2 uppercase font-bold tracking-wider cursor-pointer"
+              className="w-full text-left px-4 py-2.5 text-sm text-control-text hover:text-control-text-bright hover:bg-control-panel-light flex items-center gap-2.5 cursor-pointer transition-colors"
             >
-              <Settings className="h-3.5 w-3.5 text-control-cyan" />
+              <Settings className="h-4 w-4 text-control-cyan shrink-0" />
               {t("taskSettings")}
             </button>
-            <button 
+            <button
               onClick={onLogout}
-              className="w-full text-left px-3 py-2 text-xs text-control-red hover:bg-control-red/10 flex items-center gap-2 border-t border-control-border/40 uppercase font-bold tracking-wider cursor-pointer"
+              className="w-full text-left px-4 py-2.5 text-sm text-control-red hover:bg-control-red/8 flex items-center gap-2.5 border-t border-control-border/40 cursor-pointer transition-colors"
             >
-              <LogOut className="h-3.5 w-3.5" />
+              <LogOut className="h-4 w-4 shrink-0" />
               {t("logoutButton")}
             </button>
           </div>

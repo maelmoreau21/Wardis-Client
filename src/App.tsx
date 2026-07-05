@@ -225,24 +225,29 @@ const App: React.FC = () => {
           
           {/* Floating Layout Restoration Banner */}
           {showRestorePrompt && (
-            <div className="fixed bottom-6 right-6 z-[9999] max-w-sm rounded-xl border border-control-cyan/45 bg-control-panel/90 p-4 font-mono text-xs text-control-text shadow-[0_0_20px_rgba(0,240,255,0.15)] backdrop-blur-md flex flex-col gap-3 animate-fade-in select-none">
-              <div className="flex items-center gap-2 text-control-cyan">
-                <Sparkles className="h-4 w-4 animate-pulse" />
-                <span className="font-bold uppercase tracking-wider">Configuration Détectée</span>
+            <div className="fixed bottom-6 right-6 z-[9999] max-w-xs rounded-2xl bg-control-panel border border-control-border p-5 shadow-2xl flex flex-col gap-3 animate-fade-in select-none">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-control-cyan/15 text-control-cyan shrink-0">
+                  <Sparkles className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-control-text-bright">Disposition détectée</p>
+                  <p className="text-xs text-control-text/70 mt-0.5">Session multi-écrans précédente trouvée</p>
+                </div>
               </div>
-              <p className="text-[10px] uppercase text-control-text/70 tracking-wider">
-                Une disposition multi-écrans précédente a été trouvée. Souhaitez-vous la restaurer ?
+              <p className="text-xs text-control-text leading-relaxed">
+                Voulez-vous restaurer votre agencement de fenêtres précédent ?
               </p>
-              <div className="flex items-center gap-2 mt-1">
+              <div className="flex items-center gap-2">
                 <button
                   onClick={handleRestoreLayout}
-                  className="flex-1 py-1.5 bg-control-cyan hover:bg-control-cyan-light text-black font-bold uppercase tracking-widest transition-all cursor-pointer text-center rounded"
+                  className="flex-1 py-2.5 bg-control-cyan hover:bg-control-cyan-light text-white font-semibold text-sm transition-all cursor-pointer text-center rounded-lg shadow-md"
                 >
                   Restaurer
                 </button>
                 <button
                   onClick={() => setShowRestorePrompt(false)}
-                  className="px-3 py-1.5 border border-control-border hover:bg-control-panel-light text-control-text hover:text-control-text-bright font-bold uppercase tracking-wider transition-all cursor-pointer rounded"
+                  className="flex-1 py-2.5 bg-control-panel-light hover:bg-control-panel border border-control-border text-control-text hover:text-control-text-bright font-medium text-sm transition-all cursor-pointer rounded-lg"
                 >
                   Ignorer
                 </button>

@@ -1,51 +1,71 @@
 @import "tailwindcss";
 
+/* ============================================================
+   WARDIS DESIGN SYSTEM – Anthracite Professional Theme
+   Philosophy: comfortable dark room, not hacker terminal.
+   • Anthracite grays (not pure black) for reduced eye fatigue
+   • Generous spacing & touch targets (min 44px interactive)
+   • Shadows replace thin borders as primary depth cue
+   • Accent: calm blue (#3b82f6) — readable, professional
+   • Status colors remain high-contrast for operators
+   ============================================================ */
+
 @theme {
-  --color-control-bg: #0b0e14;
-  --color-control-panel: #12161f;
-  --color-control-panel-light: #1a1f2c;
-  --color-control-border: #242a36;
-  --color-control-border-active: #00a2ff;
-  --color-control-cyan: #00a2ff;
-  --color-control-green: #10b981;
-  --color-control-amber: #f59e0b;
-  --color-control-red: #ef4444;
-  --color-control-gray: #6b7280;
-  --color-control-text: #9ca3af;
-  --color-control-text-bright: #f3f4f6;
+  /* ── Dark theme base (default) ── */
+  --color-control-bg:           #1e2129;   /* anthracite, not jet black */
+  --color-control-panel:        #272b35;   /* card / panel surface */
+  --color-control-panel-light:  #2f3440;   /* hover / elevated surface */
+  --color-control-border:       #3a3f4d;   /* subtle separator */
+  --color-control-border-active: #3b82f6;  /* calm blue accent */
+  --color-control-cyan:         #3b82f6;   /* primary accent */
+  --color-control-cyan-light:   #60a5fa;   /* hover tint */
+  --color-control-green:        #22c55e;   /* status OK */
+  --color-control-amber:        #f59e0b;   /* warning */
+  --color-control-red:          #ef4444;   /* alarm / error */
+  --color-control-gray:         #6b7280;   /* muted */
+  --color-control-text:         #9ca3af;   /* body text */
+  --color-control-text-bright:  #f1f5f9;   /* headings / active */
 
   --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+/* ── Light theme override ── */
 .theme-light {
-  --color-control-bg: #f8fafc;
-  --color-control-panel: #ffffff;
-  --color-control-panel-light: #f1f5f9;
-  --color-control-border: #e2e8f0;
-  --color-control-border-active: #0ea5e9;
-  --color-control-cyan: #0ea5e9;
-  --color-control-green: #10b981;
-  --color-control-amber: #f59e0b;
-  --color-control-red: #ef4444;
-  --color-control-gray: #6b7280;
-  --color-control-text: #475569;
-  --color-control-text-bright: #0f172a;
+  --color-control-bg:           #f0f2f5;
+  --color-control-panel:        #ffffff;
+  --color-control-panel-light:  #f4f6f9;
+  --color-control-border:       #e2e8f0;
+  --color-control-border-active: #3b82f6;
+  --color-control-cyan:         #2563eb;
+  --color-control-cyan-light:   #3b82f6;
+  --color-control-green:        #16a34a;
+  --color-control-amber:        #d97706;
+  --color-control-red:          #dc2626;
+  --color-control-gray:         #6b7280;
+  --color-control-text:         #4b5563;
+  --color-control-text-bright:  #111827;
 }
 
+/* ── Dark theme explicit class ── */
 .theme-dark {
-  --color-control-bg: #0b0e14;
-  --color-control-panel: #12161f;
-  --color-control-panel-light: #1a1f2c;
-  --color-control-border: #242a36;
-  --color-control-border-active: #00a2ff;
-  --color-control-cyan: #00a2ff;
-  --color-control-green: #10b981;
-  --color-control-amber: #f59e0b;
-  --color-control-red: #ef4444;
-  --color-control-gray: #6b7280;
-  --color-control-text: #9ca3af;
-  --color-control-text-bright: #f3f4f6;
+  --color-control-bg:           #1e2129;
+  --color-control-panel:        #272b35;
+  --color-control-panel-light:  #2f3440;
+  --color-control-border:       #3a3f4d;
+  --color-control-border-active: #3b82f6;
+  --color-control-cyan:         #3b82f6;
+  --color-control-cyan-light:   #60a5fa;
+  --color-control-green:        #22c55e;
+  --color-control-amber:        #f59e0b;
+  --color-control-red:          #ef4444;
+  --color-control-gray:         #6b7280;
+  --color-control-text:         #9ca3af;
+  --color-control-text-bright:  #f1f5f9;
 }
+
+/* ============================================================
+   BASE RESET
+   ============================================================ */
 
 html, body, #root {
   margin: 0;
@@ -54,34 +74,46 @@ html, body, #root {
   width: 100%;
   background-color: var(--color-control-bg);
   color: var(--color-control-text);
-  font-family: "Plus Jakarta Sans", "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  font-family: "Inter", "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
   overflow: hidden;
   user-select: none;
   transition: background-color 0.3s ease, color 0.3s ease;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 * {
   box-sizing: border-box;
 }
 
-/* Clear retro overlays */
-body::before {
-  display: none;
-}
+/* Legacy retro overlay cleanup */
+body::before { display: none; }
+.digital-grid { /* preserved for compat */ }
+.crt-overlay::after { display: none; }
+.brackets::before, .brackets::after { display: none; }
 
-.digital-grid {
-  /* Empty class to prevent errors but remove grid lines */
-}
+/* ============================================================
+   SHELL
+   ============================================================ */
 
 .wardis-shell {
   background: var(--color-control-bg);
   color: var(--color-control-text);
 }
 
+/* ============================================================
+   PANELS — depth via shadow, not border density
+   ============================================================ */
+
 .wardis-panel {
   background: var(--color-control-panel);
   border: 1px solid var(--color-control-border);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.22),
+    0 1px 4px  rgba(0, 0, 0, 0.14);
   border-radius: 1rem;
   transition: background-color 0.3s ease, border-color 0.3s ease;
 }
@@ -89,82 +121,106 @@ body::before {
 .wardis-card {
   background: var(--color-control-panel);
   border: 1px solid var(--color-control-border);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+  box-shadow:
+    0 2px 8px  rgba(0, 0, 0, 0.12),
+    0 1px 3px  rgba(0, 0, 0, 0.08);
   border-radius: 0.75rem;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .wardis-card:hover {
-  border-color: var(--color-control-cyan);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
-  transform: translateY(-1px);
+  border-color: var(--color-control-border-active);
+  box-shadow:
+    0 8px 24px rgba(59, 130, 246, 0.12),
+    0 2px 6px  rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
 }
+
+/* ============================================================
+   CHIPS / BADGES
+   ============================================================ */
 
 .wardis-chip {
   background: var(--color-control-panel-light);
   border: 1px solid var(--color-control-border);
   color: var(--color-control-text-bright);
   border-radius: 9999px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
   transition: all 0.2s ease;
 }
 
+/* ============================================================
+   FORM ELEMENTS — accessible sizing
+   ============================================================ */
+
 .wardis-input {
   background: var(--color-control-panel-light);
-  border: 1px solid var(--color-control-border);
+  border: 1.5px solid var(--color-control-border);
   color: var(--color-control-text-bright);
-  transition: all 0.2s ease;
-  border-radius: 0.5rem;
+  border-radius: 0.625rem;
+  font-size: 0.875rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .wardis-input:focus {
   border-color: var(--color-control-border-active);
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
   outline: none;
 }
 
 .wardis-input::placeholder {
-  color: var(--color-control-text);
-  opacity: 0.6;
+  color: var(--color-control-gray);
+  opacity: 0.75;
 }
+
+/* ============================================================
+   BUTTONS — 44px minimum touch target
+   ============================================================ */
 
 .wardis-button {
   background: var(--color-control-cyan);
   color: white;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+  border-radius: 0.625rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.30);
   transition: all 0.2s ease;
-  border-radius: 0.5rem;
+  min-height: 2.75rem;
 }
 
-.wardis-button:hover {
-  opacity: 0.95;
-  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.25);
-  transform: translateY(-0.5px);
+.wardis-button:hover:not(:disabled) {
+  background: var(--color-control-cyan-light, #60a5fa);
+  box-shadow: 0 6px 18px rgba(59, 130, 246, 0.40);
+  transform: translateY(-1px);
 }
+
+.wardis-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
+}
+
+/* ============================================================
+   ORB / ACCENT ELEMENT
+   ============================================================ */
 
 .wardis-orb {
   background: linear-gradient(135deg, var(--color-control-cyan), #818cf8);
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.25);
 }
 
-.crt-overlay::after {
-  display: none;
-}
+/* ============================================================
+   SCROLLBAR — thin, non-intrusive
+   ============================================================ */
 
-.brackets::before, .brackets::after {
-  display: none; /* remove tactical military corners */
-}
-
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(156, 163, 175, 0.25);
+::-webkit-scrollbar         { width: 5px; height: 5px; }
+::-webkit-scrollbar-track   { background: transparent; }
+::-webkit-scrollbar-thumb   {
+  background: rgba(156, 163, 175, 0.22);
   border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(99, 102, 241, 0.4);
+  background: rgba(59, 130, 246, 0.38);
 }

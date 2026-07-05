@@ -108,7 +108,7 @@ export const Login: React.FC<LoginProps> = ({ theme, onToggleTheme }) => {
         <div className="lg:col-span-7 wardis-panel p-8 sm:p-10 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between gap-3 flex-wrap">
-              <div className="inline-flex items-center gap-2 rounded-full border border-control-cyan/15 bg-control-cyan/5 px-3.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-control-cyan">
+              <div className="inline-flex items-center gap-2 rounded-full border border-control-cyan/20 bg-control-cyan/8 px-3.5 py-1.5 text-xs font-medium text-control-cyan">
                 <Shield className="h-3.5 w-3.5" />
                 {t("supervisionPlatform")}
               </div>
@@ -116,7 +116,7 @@ export const Login: React.FC<LoginProps> = ({ theme, onToggleTheme }) => {
                 <button
                   type="button"
                   onClick={() => setLanguage(language === "fr" ? "en" : "fr")}
-                  className="flex items-center gap-2 rounded-full border border-control-border bg-control-panel-light hover:bg-control-panel-light/80 px-3.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-control-text transition cursor-pointer"
+                  className="flex items-center gap-2 rounded-full border border-control-border bg-control-panel-light hover:bg-control-panel px-3.5 py-1.5 text-xs font-medium text-control-text transition cursor-pointer"
                 >
                   <Globe className="h-3.5 w-3.5 text-control-cyan" />
                   {language === "fr" ? "EN" : "FR"}
@@ -124,7 +124,7 @@ export const Login: React.FC<LoginProps> = ({ theme, onToggleTheme }) => {
                 <button
                   type="button"
                   onClick={onToggleTheme}
-                  className="flex items-center gap-2 rounded-full border border-control-border bg-control-panel-light hover:bg-control-panel-light/80 px-3.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-control-text transition cursor-pointer"
+                  className="flex items-center gap-2 rounded-full border border-control-border bg-control-panel-light hover:bg-control-panel px-3.5 py-1.5 text-xs font-medium text-control-text transition cursor-pointer"
                 >
                   {theme === "dark" ? <Sun className="h-3.5 w-3.5 text-control-amber" /> : <Moon className="h-3.5 w-3.5 text-control-cyan" />}
                   {theme === "dark" ? t("clearMode") : t("darkMode")}
@@ -151,28 +151,28 @@ export const Login: React.FC<LoginProps> = ({ theme, onToggleTheme }) => {
 
           {/* Quick Info Grid */}
           <div className="mt-10 grid gap-4 sm:grid-cols-3">
-            <div className="wardis-card p-4 hover:border-control-cyan/30">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-control-cyan/10 text-control-cyan">
-                <Camera className="h-4 w-4" />
+            <div className="wardis-card p-5 hover:border-control-cyan/30">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-control-cyan/10 text-control-cyan">
+                <Camera className="h-5 w-5" />
               </div>
-              <div className="mt-3 text-xs font-bold text-control-text-bright uppercase tracking-wider">{t("surveillance")}</div>
-              <p className="mt-1 text-xs text-control-text leading-relaxed">{t("surveillanceDesc")}</p>
+              <div className="mt-3 text-sm font-semibold text-control-text-bright">{t("surveillance")}</div>
+              <p className="mt-1.5 text-xs text-control-text leading-relaxed">{t("surveillanceDesc")}</p>
             </div>
             
-            <div className="wardis-card p-4 hover:border-control-cyan/30">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-control-cyan/10 text-control-cyan">
-                <DoorOpen className="h-4 w-4" />
+            <div className="wardis-card p-5 hover:border-control-cyan/30">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-control-cyan/10 text-control-cyan">
+                <DoorOpen className="h-5 w-5" />
               </div>
-              <div className="mt-3 text-xs font-bold text-control-text-bright uppercase tracking-wider">{t("access")}</div>
-              <p className="mt-1 text-xs text-control-text leading-relaxed">{t("accessDesc")}</p>
+              <div className="mt-3 text-sm font-semibold text-control-text-bright">{t("access")}</div>
+              <p className="mt-1.5 text-xs text-control-text leading-relaxed">{t("accessDesc")}</p>
             </div>
             
-            <div className="wardis-card p-4 hover:border-control-cyan/30">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-control-cyan/10 text-control-cyan">
-                <BellRing className="h-4 w-4" />
+            <div className="wardis-card p-5 hover:border-control-cyan/30">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-control-cyan/10 text-control-cyan">
+                <BellRing className="h-5 w-5" />
               </div>
-              <div className="mt-3 text-xs font-bold text-control-text-bright uppercase tracking-wider">{t("alerts")}</div>
-              <p className="mt-1 text-xs text-control-text leading-relaxed">{t("alertsDesc")}</p>
+              <div className="mt-3 text-sm font-semibold text-control-text-bright">{t("alerts")}</div>
+              <p className="mt-1.5 text-xs text-control-text leading-relaxed">{t("alertsDesc")}</p>
             </div>
           </div>
         </div>
@@ -255,7 +255,7 @@ export const Login: React.FC<LoginProps> = ({ theme, onToggleTheme }) => {
             ) : (
               <form onSubmit={handleSubmit} className="mt-6 space-y-4">
                 <div>
-                  <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-control-cyan">
+                  <label className="mb-2 block text-xs font-semibold text-control-text-bright">
                     {t("serverUrlLabel")}
                   </label>
                   <input
@@ -269,7 +269,7 @@ export const Login: React.FC<LoginProps> = ({ theme, onToggleTheme }) => {
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-control-cyan">
+                  <label className="mb-2 block text-xs font-semibold text-control-text-bright">
                     {t("usernameLabel")}
                   </label>
                   <input
@@ -283,7 +283,7 @@ export const Login: React.FC<LoginProps> = ({ theme, onToggleTheme }) => {
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-control-cyan">
+                  <label className="mb-2 block text-xs font-semibold text-control-text-bright">
                     {t("passwordLabel")}
                   </label>
                   <div className="relative">
@@ -293,12 +293,12 @@ export const Login: React.FC<LoginProps> = ({ theme, onToggleTheme }) => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder={t("passwordPlaceholder")}
-                      className="wardis-input w-full px-3 py-2.5 pr-10 text-sm outline-none transition focus:border-control-cyan"
+                      className="wardis-input w-full px-4 py-3 pr-11 text-sm outline-none transition focus:border-control-cyan"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-control-text hover:text-control-cyan transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-control-text hover:text-control-cyan transition-colors p-1"
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>

@@ -30,79 +30,84 @@ export const IconRail: React.FC<IconRailProps> = ({
   t
 }) => {
   return (
-    <aside className="w-16 bg-control-panel border-r border-control-border flex flex-col items-center py-4 justify-between shrink-0 select-none h-full">
+    <aside className="w-[72px] bg-control-panel border-r border-control-border flex flex-col items-center py-3 justify-between shrink-0 select-none h-full">
       {/* Navigation Modules */}
-      <div className="flex flex-col gap-3 w-full items-center">
+      <div className="flex flex-col gap-1.5 w-full items-center px-2">
         {links.map((link) => {
           const Icon = link.icon;
           const isActive = activeType === link.type;
           const isAlarms = link.type === "alarms";
-          
+          const label = t(link.labelKey);
+          // Shorten label to ~8 chars for display under icon
+          const shortLabel = label.length > 9 ? label.substring(0, 8) + "…" : label;
+
           return (
-            <div key={link.key} className="relative group w-12 h-12 flex items-center justify-center">
-              {/* Active Accent Bar */}
-              {isActive && (
-                <div className="absolute left-0 w-1 h-8 bg-control-cyan rounded-r-md transition-all duration-300" />
-              )}
-              
+            <div key={link.key} className="relative group w-full">
               <button
                 onClick={() => onLinkClick(link)}
-                className={`w-12 h-12 rounded-lg flex items-center justify-center transition-all duration-200 cursor-pointer relative ${
+                className={`relative w-full rounded-xl flex flex-col items-center justify-center gap-1 py-2.5 px-1 transition-all duration-200 cursor-pointer ${
                   isActive
-                    ? "bg-control-cyan/10 border border-control-cyan/30 text-control-cyan shadow-sm shadow-control-cyan/5"
-                    : "text-control-text border border-transparent hover:bg-control-panel-light hover:text-control-text-bright hover:border-control-border"
+                    ? "bg-control-cyan/15 text-control-cyan"
+                    : "text-control-text hover:bg-control-panel-light hover:text-control-text-bright"
                 }`}
               >
-                <Icon className="h-5 w-5 shrink-0" />
-                
-                {/* Alarm Badge */}
-                {isAlarms && activeAlarmsCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-control-red text-white text-[9px] font-bold rounded-full h-5 min-w-[20px] px-1 flex items-center justify-center animate-pulse border border-control-panel">
-                    {activeAlarmsCount}
-                  </span>
-                )}
+                {/* Icon */}
+                <div className="relative">
+                  <Icon className="h-5 w-5 shrink-0" />
+
+                  {/* Alarm Badge */}
+                  {isAlarms && activeAlarmsCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 bg-control-red text-white text-[9px] font-bold rounded-full h-[18px] min-w-[18px] px-1 flex items-center justify-center border-2 border-control-panel">
+                      {activeAlarmsCount > 99 ? "99+" : activeAlarmsCount}
+                    </span>
+                  )}
+                </div>
+
+                {/* Short label below icon */}
+                <span className="text-[10px] font-medium leading-none text-center w-full truncate px-0.5">
+                  {shortLabel}
+                </span>
               </button>
 
-              {/* Tooltip */}
-              <div className="absolute left-14 top-1/2 -translate-y-1/2 ml-2 bg-control-panel border border-control-border text-control-text-bright text-[10px] uppercase font-bold tracking-wider rounded px-2.5 py-1.5 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-50 shadow-xl">
-                {t(link.labelKey)}
+              {/* Full Tooltip on hover */}
+              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 bg-control-panel-light border border-control-border text-control-text-bright text-xs font-medium rounded-lg px-3 py-1.5 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-50 shadow-xl">
+                {label}
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* Bottom Actions (Settings, Profile/Logout) */}
-      <div className="flex flex-col gap-3 w-full items-center mt-auto pt-4 border-t border-control-border/40">
+      {/* Bottom Actions */}
+      <div className="flex flex-col gap-1.5 w-full items-center px-2 pt-3 border-t border-control-border/40">
         {/* Settings */}
-        <div className="relative group w-12 h-12 flex items-center justify-center">
-          {activeType === "settings" && (
-            <div className="absolute left-0 w-1 h-8 bg-control-cyan rounded-r-md transition-all duration-300" />
-          )}
+        <div className="relative group w-full">
           <button
             onClick={onSettingsClick}
-            className={`w-12 h-12 rounded-lg flex items-center justify-center transition-all duration-200 cursor-pointer ${
+            className={`relative w-full rounded-xl flex flex-col items-center justify-center gap-1 py-2.5 px-1 transition-all duration-200 cursor-pointer ${
               activeType === "settings"
-                ? "bg-control-cyan/10 border border-control-cyan/30 text-control-cyan"
-                : "text-control-text border border-transparent hover:bg-control-panel-light hover:text-control-text-bright hover:border-control-border"
+                ? "bg-control-cyan/15 text-control-cyan"
+                : "text-control-text hover:bg-control-panel-light hover:text-control-text-bright"
             }`}
           >
             <Settings className="h-5 w-5 shrink-0" />
+            <span className="text-[10px] font-medium leading-none">{t("taskSettings").substring(0, 8)}</span>
           </button>
-          <div className="absolute left-14 top-1/2 -translate-y-1/2 ml-2 bg-control-panel border border-control-border text-control-text-bright text-[10px] uppercase font-bold tracking-wider rounded px-2.5 py-1.5 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-50 shadow-xl">
+          <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 bg-control-panel-light border border-control-border text-control-text-bright text-xs font-medium rounded-lg px-3 py-1.5 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-50 shadow-xl">
             {t("taskSettings")}
           </div>
         </div>
 
         {/* Logout */}
-        <div className="relative group w-12 h-12 flex items-center justify-center">
+        <div className="relative group w-full">
           <button
             onClick={onLogoutClick}
-            className="w-12 h-12 rounded-lg flex items-center justify-center transition-all duration-200 cursor-pointer text-control-red/80 border border-transparent hover:bg-control-panel-light hover:text-control-red hover:border-control-border"
+            className="relative w-full rounded-xl flex flex-col items-center justify-center gap-1 py-2.5 px-1 transition-all duration-200 cursor-pointer text-control-red/70 hover:bg-control-red/10 hover:text-control-red"
           >
             <LogOut className="h-5 w-5 shrink-0" />
+            <span className="text-[10px] font-medium leading-none">{t("logoutButton").substring(0, 8)}</span>
           </button>
-          <div className="absolute left-14 top-1/2 -translate-y-1/2 ml-2 bg-control-panel border border-control-border text-control-text-bright text-[10px] uppercase font-bold tracking-wider rounded px-2.5 py-1.5 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-50 shadow-xl">
+          <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 bg-control-panel-light border border-control-border text-control-text-bright text-xs font-medium rounded-lg px-3 py-1.5 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-50 shadow-xl">
             {t("logoutButton")}
           </div>
         </div>
