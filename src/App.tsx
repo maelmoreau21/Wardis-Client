@@ -13,6 +13,7 @@ import { InteractiveMap } from "./components/InteractiveMap";
 import { UserSettings } from "./components/UserSettings";
 import { UserManagement } from "./components/UserManagement";
 import { CameraConfig } from "./components/CameraConfig";
+import { Reports } from "./components/Reports";
 
 // Multi-window and layout persistence imports
 import { DetachedHeader } from "./components/DetachedHeader";
@@ -196,7 +197,8 @@ const App: React.FC = () => {
                           tabType === "alarms" ? "Centre d'Alarmes" :
                           tabType === "access" ? "Contrôle d'Accès" :
                           tabType === "events" ? "Journal des Événements" :
-                          tabType === "map" ? "Cartographie Interactive" : "Console Wardis";
+                          tabType === "map" ? "Cartographie Interactive" :
+                          tabType === "reports" ? "Rapports & Statistiques" : "Console Wardis";
     return (
       <div className={`h-screen w-screen bg-control-bg flex flex-col overflow-hidden ${theme === "dark" ? "theme-dark" : "theme-light"}`}>
         <DetachedHeader title={`Wardis Detached Workspace // ${formattedTitle}`} />
@@ -209,6 +211,7 @@ const App: React.FC = () => {
           {tabType === "camera-config" && <CameraConfig />}
           {tabType === "users" && <UserManagement />}
           {tabType === "settings" && <UserSettings theme={theme} onToggleTheme={() => setTheme(theme === "dark" ? "light" : "dark")} />}
+          {tabType === "reports" && <Reports />}
         </div>
       </div>
     );
