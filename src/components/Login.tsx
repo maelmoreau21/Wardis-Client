@@ -10,13 +10,20 @@ interface LoginProps {
 }
 
 export const Login: React.FC<LoginProps> = ({ theme, onToggleTheme }) => {
-  const { login, loading, error, clearError } = useAuthStore();
+  const { login, loginMfa, loading, error, clearError, mfaRequired, setMfaState } = useAuthStore();
   const { t, language, setLanguage } = useLanguageStore();
   const [serverUrl, setServerUrl] = useState(() => localStorage.getItem("wardis-server-url") || "http://localhost:8080");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isServerActive, setIsServerActive] = useState<boolean | null>(null);
+  const [mfaCode, setMfaCode] = useState("");
+
+  const handleMfaSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!mfaCode) return;
+    await loginMfa(mfaCode);
+  };
 
   useEffect(() => {
     return () => clearError();
@@ -175,8 +182,12 @@ export const Login: React.FC<LoginProps> = ({ theme, onToggleTheme }) => {
           <div>
             <div className="flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-xl font-bold text-control-text-bright tracking-tight">{t("authTitle")}</h2>
-                <p className="mt-1 text-xs text-control-text">{t("authDesc")}</p>
+                <h2 className="text-xl font-bold text-control-text-bright tracking-tight">
+                  {mfaRequired ? t("mfaRequiredTitle") : t("authTitle")}
+                </h2>
+                <p className="mt-1 text-xs text-control-text">
+                  {mfaRequired ? t("mfaRequiredDesc") : t("authDesc")}
+                </p>
               </div>
               {isServerActive === true && (
                 <div className="flex items-center gap-1.5 rounded-full border border-control-green/20 bg-control-green/5 px-3 py-1 text-[10px] font-semibold text-control-green">
@@ -205,73 +216,111 @@ export const Login: React.FC<LoginProps> = ({ theme, onToggleTheme }) => {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-              <div>
-                <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-control-cyan">
-                  {t("serverUrlLabel")}
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={serverUrl}
-                  onChange={(e) => setServerUrl(e.target.value)}
-                  placeholder="http://localhost:8080"
-                  className="wardis-input w-full px-3 py-2.5 text-sm outline-none transition focus:border-control-cyan"
-                />
-              </div>
-
-              <div>
-                <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-control-cyan">
-                  {t("usernameLabel")}
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder={t("usernamePlaceholder")}
-                  className="wardis-input w-full px-3 py-2.5 text-sm outline-none transition focus:border-control-cyan"
-                />
-              </div>
-
-              <div>
-                <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-control-cyan">
-                  {t("passwordLabel")}
-                </label>
-                <div className="relative">
+            {mfaRequired ? (
+              <form onSubmit={handleMfaSubmit} className="mt-6 space-y-4">
+                <div>
+                  <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-control-cyan">
+                    {t("mfaVerifyCodeLabel")}
+                  </label>
                   <input
-                    type={showPassword ? "text" : "password"}
+                    type="text"
                     required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder={t("passwordPlaceholder")}
-                    className="wardis-input w-full px-3 py-2.5 pr-10 text-sm outline-none transition focus:border-control-cyan"
+                    maxLength={6}
+                    value={mfaCode}
+                    onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ""))}
+                    placeholder={t("mfaVerifyCodePlaceholder")}
+                    className="wardis-input w-full px-3 py-3 text-sm outline-none transition focus:border-control-cyan tracking-[0.4em] text-center font-mono font-bold text-base"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-control-text hover:text-control-cyan transition-colors"
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
                 </div>
-              </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="wardis-button flex w-full items-center justify-center gap-2 px-4 py-3 text-sm font-semibold transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70 cursor-pointer"
-              >
-                {loading ? (
-                  <>{t("submitting")}</>
-                ) : (
-                  <>
-                    <Shield className="h-4 w-4" />
-                    {t("loginButton")}
-                  </>
-                )}
-              </button>
-            </form>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="wardis-button flex w-full items-center justify-center gap-2 px-4 py-3 text-sm font-semibold transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70 cursor-pointer"
+                >
+                  {loading ? t("submitting") : t("mfaRequiredButton")}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMfaState(false, null);
+                    setMfaCode("");
+                  }}
+                  className="w-full text-center text-xs font-semibold text-control-text/70 hover:text-control-cyan transition mt-2 cursor-pointer"
+                >
+                  {t("mfaCancelButton")}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+                <div>
+                  <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-control-cyan">
+                    {t("serverUrlLabel")}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={serverUrl}
+                    onChange={(e) => setServerUrl(e.target.value)}
+                    placeholder="http://localhost:8080"
+                    className="wardis-input w-full px-3 py-2.5 text-sm outline-none transition focus:border-control-cyan"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-control-cyan">
+                    {t("usernameLabel")}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder={t("usernamePlaceholder")}
+                    className="wardis-input w-full px-3 py-2.5 text-sm outline-none transition focus:border-control-cyan"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-control-cyan">
+                    {t("passwordLabel")}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder={t("passwordPlaceholder")}
+                      className="wardis-input w-full px-3 py-2.5 pr-10 text-sm outline-none transition focus:border-control-cyan"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-control-text hover:text-control-cyan transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="wardis-button flex w-full items-center justify-center gap-2 px-4 py-3 text-sm font-semibold transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70 cursor-pointer"
+                >
+                  {loading ? (
+                    <>{t("submitting")}</>
+                  ) : (
+                    <>
+                      <Shield className="h-4 w-4" />
+                      {t("loginButton")}
+                    </>
+                  )}
+                </button>
+              </form>
+            )}
           </div>
 
           <div className="mt-8 text-center text-[10px] uppercase tracking-wider text-control-text/50">
