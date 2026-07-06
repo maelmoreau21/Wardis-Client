@@ -100,6 +100,8 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
 
   reorderTabs: (startIndex, endIndex) => {
     const { tabs } = get();
+    // The status (home) tab is always pinned at the front — never reorder it
+    if (tabs[startIndex]?.type === "status" || endIndex === 0) return;
     const result = Array.from(tabs);
     const [removed] = result.splice(startIndex, 1);
     result.splice(endIndex, 0, removed);

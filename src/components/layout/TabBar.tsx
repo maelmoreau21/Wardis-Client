@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import {
   Shield, Bell, Clock, ChevronDown, Settings, LogOut,
-  Plus, X, ExternalLink, type LucideIcon
+  Plus, X, ExternalLink, LayoutGrid, type LucideIcon
 } from "lucide-react";
 import { type TabType } from "../../store/workspaceStore";
 import { type TranslationKey } from "../../store/languageStore";
@@ -137,17 +137,50 @@ export const TabBar: React.FC<TabBarProps> = ({
         </div>
       </div>
 
-      {/* ── Tab Strip ── */}
+      {/* ── Home tab: pinned, fixed, non-draggable ── */}
+      {(() => {
+        const homeTab = tabs.find((t) => t.type === "status");
+        if (!homeTab) return null;
+        const isActive = homeTab.id === activeTabId;
+        return (
+          <div
+            onClick={() => onTabSelect(homeTab.id)}
+            title="Vue d'ensemble — Accueil"
+            className={`
+              relative flex items-center gap-1.5 h-9 px-3 text-xs font-medium
+              border-r border-control-border/60 cursor-pointer shrink-0 select-none
+              transition-all duration-100
+              ${
+                isActive
+                  ? "bg-control-bg text-control-cyan border-t-2 border-t-control-cyan -mb-px pb-px"
+                  : "bg-control-panel/80 text-control-text/70 hover:bg-control-panel-light hover:text-control-text-bright"
+              }
+            `}
+          >
+            <LayoutGrid
+              className={`h-3.5 w-3.5 shrink-0 ${isActive ? "text-control-cyan" : "text-control-text/50"}`}
+            />
+            <span className="pointer-events-none">{t(homeTab.title)}</span>
+            {isActive && (
+              <span className="absolute bottom-0 left-0 right-0 h-px bg-control-bg" />
+            )}
+          </div>
+        );
+      })()}
+
+      {/* ── Tab Strip (closable / draggable tabs only) ── */}
       <div className="flex items-end h-full flex-1 overflow-x-auto min-w-0 gap-0">
-        {tabs.map((tab, idx) => {
+        {tabs.filter((t) => t.type !== "status").map((tab) => {
           const TabIcon = getTabIcon(tab.type);
           const isActive = tab.id === activeTabId;
+          // Offset idx for drag so it doesn't conflict with the pinned tab
+          const draggableIdx = tabs.indexOf(tab);
           return (
             <div
               key={tab.id}
               draggable
-              onDragStart={(e) => handleDragStart(e, idx)}
-              onDragOver={(e) => handleDragOver(e, idx)}
+              onDragStart={(e) => handleDragStart(e, draggableIdx)}
+              onDragOver={(e) => handleDragOver(e, draggableIdx)}
               onDragEnd={handleDragEnd}
               onClick={() => onTabSelect(tab.id)}
               className={`
