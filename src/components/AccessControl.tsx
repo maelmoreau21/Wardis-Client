@@ -291,16 +291,16 @@ export const AccessControl: React.FC = () => {
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between border-b border-control-border bg-control-panel/40 p-3 gap-3 shrink-0">
         
         {/* Sub tabs */}
-        <div className="flex gap-2 text-xs font-mono">
+        <div className="flex gap-2 text-sm">
           <button
             onClick={() => setActiveSubTab("doors")}
-            className={`px-3 py-1.5 border transition-all uppercase tracking-wider font-bold cursor-pointer ${
+            className={`px-4 py-2 rounded-lg transition-all font-medium cursor-pointer min-h-[40px] ${
               activeSubTab === "doors"
-                ? "border-control-cyan text-control-cyan bg-control-cyan/5"
-                : "border-control-border text-control-text/60 hover:text-control-text hover:bg-control-panel-light/35"
+                ? "bg-control-cyan/10 border border-control-cyan/30 text-control-cyan"
+                : "border border-transparent text-control-text/60 hover:text-control-text hover:bg-control-panel-light/35"
             }`}
           >
-            Points d'Accès (Portes)
+            Points d'accès
           </button>
           
           <button
@@ -309,17 +309,17 @@ export const AccessControl: React.FC = () => {
               setActiveSubTab("history");
             }}
             disabled={!isAdmin}
-            className={`px-3 py-1.5 border transition-all uppercase tracking-wider font-bold flex items-center gap-1.5 ${
-              !isAdmin ? "opacity-40 cursor-not-allowed border-control-border text-control-text/40" :
+            className={`px-4 py-2 rounded-lg transition-all font-medium flex items-center gap-1.5 min-h-[40px] ${
+              !isAdmin ? "opacity-40 cursor-not-allowed border border-transparent text-control-text/40" :
               activeSubTab === "history"
-                ? "border-control-cyan text-control-cyan bg-control-cyan/5"
-                : "border-control-border text-control-text/60 hover:text-control-text hover:bg-control-panel-light/35 cursor-pointer"
+                ? "bg-control-cyan/10 border border-control-cyan/30 text-control-cyan"
+                : "border border-transparent text-control-text/60 hover:text-control-text hover:bg-control-panel-light/35 cursor-pointer"
             }`}
           >
             Historique des accès
             {!isAdmin && (
-              <span className="text-[8px] px-1 bg-control-red/10 border border-control-red/30 text-control-red font-mono scale-90">
-                LOCKED
+              <span className="text-xs px-1.5 py-0.5 rounded bg-control-red/10 border border-control-red/30 text-control-red">
+                Restreint
               </span>
             )}
           </button>
@@ -330,17 +330,17 @@ export const AccessControl: React.FC = () => {
               setActiveSubTab("cardholders");
             }}
             disabled={!isAdmin}
-            className={`px-3 py-1.5 border transition-all uppercase tracking-wider font-bold flex items-center gap-1.5 ${
-              !isAdmin ? "opacity-40 cursor-not-allowed border-control-border text-control-text/40" :
+            className={`px-4 py-2 rounded-lg transition-all font-medium flex items-center gap-1.5 min-h-[40px] ${
+              !isAdmin ? "opacity-40 cursor-not-allowed border border-transparent text-control-text/40" :
               activeSubTab === "cardholders"
-                ? "border-control-cyan text-control-cyan bg-control-cyan/5"
-                : "border-control-border text-control-text/60 hover:text-control-text hover:bg-control-panel-light/35 cursor-pointer"
+                ? "bg-control-cyan/10 border border-control-cyan/30 text-control-cyan"
+                : "border border-transparent text-control-text/60 hover:text-control-text hover:bg-control-panel-light/35 cursor-pointer"
             }`}
           >
-            Gestion des Titulaires
+            Titulaires de badges
             {!isAdmin && (
-              <span className="text-[8px] px-1 bg-control-red/10 border border-control-red/30 text-control-red font-mono scale-90">
-                LOCKED
+              <span className="text-xs px-1.5 py-0.5 rounded bg-control-red/10 border border-control-red/30 text-control-red">
+                Restreint
               </span>
             )}
           </button>
@@ -349,14 +349,14 @@ export const AccessControl: React.FC = () => {
         {/* Global actions */}
         <div className="flex items-center gap-2">
           {error && (
-            <div className="flex items-center gap-1.5 text-xs text-control-red font-mono px-3 py-1 border border-control-red/20 bg-control-red/5">
-              <AlertCircle className="h-3.5 w-3.5" />
+            <div className="flex items-center gap-2 text-sm text-control-red px-3 py-2 rounded-lg border border-control-red/20 bg-control-red/5">
+              <AlertCircle className="h-4 w-4 shrink-0" />
               <span>{error}</span>
               <button 
                 onClick={clearError} 
-                className="ml-1 text-control-text hover:text-control-text-bright cursor-pointer"
+                className="ml-1 text-control-text hover:text-control-text-bright cursor-pointer p-0.5 rounded"
               >
-                [X]
+                ×
               </button>
             </div>
           )}
@@ -364,10 +364,10 @@ export const AccessControl: React.FC = () => {
           <button
             onClick={handleRefresh}
             disabled={loading}
-            className="flex items-center gap-1.5 border border-control-border bg-control-panel-light hover:bg-control-panel-light/80 text-control-cyan text-xs py-1.5 px-3.5 tracking-wider cursor-pointer font-bold transition-all hover:border-control-cyan/60 rounded-lg disabled:opacity-50"
+            className="flex items-center gap-2 border border-control-border bg-control-panel-light hover:bg-control-panel text-control-cyan text-sm py-2 px-4 cursor-pointer font-medium transition-all rounded-lg disabled:opacity-50 min-h-[40px]"
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-            <span>SYNC GATEWAY</span>
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            <span>Actualiser</span>
           </button>
         </div>
       </div>
@@ -377,22 +377,22 @@ export const AccessControl: React.FC = () => {
         <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden">
           
           {/* Site Selector Sidebar */}
-          <div className="w-full md:w-56 border-b md:border-b-0 md:border-r border-control-border bg-control-panel/20 p-4 shrink-0 font-mono text-xs">
-            <div className="flex items-center gap-1.5 text-control-cyan font-bold uppercase tracking-wider mb-4 border-b border-control-border/40 pb-2">
-              <Building className="h-4 w-4" />
-              <span>Sites Directory</span>
+          <div className="w-full md:w-56 border-b md:border-b-0 md:border-r border-control-border bg-control-panel/20 p-4 shrink-0">
+            <div className="flex items-center gap-1.5 text-control-text-bright font-semibold mb-4 border-b border-control-border/40 pb-2">
+              <Building className="h-4 w-4 text-control-cyan" />
+              <span>Sites</span>
             </div>
             
             <div className="flex flex-row md:flex-col gap-1 overflow-x-auto md:overflow-x-visible pb-2 md:pb-0">
               <button
                 onClick={() => setSelectedSiteId("all")}
-                className={`w-full text-left px-3 py-2 border transition-all uppercase tracking-wider font-semibold whitespace-nowrap md:whitespace-normal cursor-pointer ${
+                className={`w-full text-left px-3 py-2 rounded-lg transition-all text-sm font-medium whitespace-nowrap md:whitespace-normal cursor-pointer ${
                   selectedSiteId === "all"
-                    ? "border-control-cyan/40 bg-control-cyan/10 text-control-cyan"
-                    : "border-transparent text-control-text/60 hover:text-control-text hover:bg-control-panel-light/30"
+                    ? "bg-control-cyan/10 border border-control-cyan/30 text-control-cyan"
+                    : "border border-transparent text-control-text/60 hover:text-control-text hover:bg-control-panel-light/30"
                 }`}
               >
-                [+] All Sites ({doors.length})
+                Tous les sites ({doors.length})
               </button>
               
               {sitesList.map((site) => {
@@ -401,20 +401,20 @@ export const AccessControl: React.FC = () => {
                   <button
                     key={site.id}
                     onClick={() => setSelectedSiteId(site.id)}
-                    className={`w-full text-left px-3 py-2 border transition-all uppercase tracking-wider font-semibold whitespace-nowrap md:whitespace-normal cursor-pointer ${
+                    className={`w-full text-left px-3 py-2 rounded-lg transition-all text-sm font-medium whitespace-nowrap md:whitespace-normal cursor-pointer ${
                       selectedSiteId === site.id
-                        ? "border-control-cyan/40 bg-control-cyan/10 text-control-cyan"
-                        : "border-transparent text-control-text/60 hover:text-control-text hover:bg-control-panel-light/30"
+                        ? "bg-control-cyan/10 border border-control-cyan/30 text-control-cyan"
+                        : "border border-transparent text-control-text/60 hover:text-control-text hover:bg-control-panel-light/30"
                     }`}
                   >
-                    // {site.name} ({count})
+                    {site.name} ({count})
                   </button>
                 );
               })}
             </div>
 
-            <div className="hidden md:block mt-6 p-3 border border-control-border bg-control-panel-light/10 text-[10px] text-control-text/50 leading-relaxed">
-              <div className="font-bold text-control-cyan/60 uppercase mb-1">Simulateur d'Accès</div>
+            <div className="hidden md:block mt-6 p-3 rounded-lg border border-control-border bg-control-panel-light/10 text-xs text-control-text/60 leading-relaxed">
+              <div className="font-semibold text-control-text/80 mb-1">Simulateur d'accès</div>
               Utilisez les contrôles rapides sur chaque porte pour simuler des passages de badges, des ouvertures forcées ou des alarmes de porte restée ouverte trop longtemps.
             </div>
           </div>
@@ -422,11 +422,11 @@ export const AccessControl: React.FC = () => {
           {/* Doors Grid View */}
           <div className="flex-1 p-4 overflow-y-auto min-h-0">
             {filteredDoors.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center p-6 border border-control-border border-dashed">
-                <AlertCircle className="h-10 w-10 text-control-text/30 mb-2" />
-                <div className="text-sm font-bold uppercase text-control-text-bright">No Doors Detected</div>
-                <div className="text-xs text-control-text/60 font-mono mt-1">
-                  Ensure the access-control service is fully deployed and synced.
+              <div className="h-full flex flex-col items-center justify-center text-center p-6 border border-control-border rounded-xl bg-control-panel/20">
+                <AlertCircle className="h-10 w-10 text-control-text/30 mb-3" />
+                <div className="text-base font-semibold text-control-text-bright">Aucune porte trouvée</div>
+                <div className="text-sm text-control-text/60 mt-1.5 max-w-xs leading-relaxed">
+                  Vérifiez que le service de contrôle d'accès est actif et synchronisé.
                 </div>
               </div>
             ) : (
@@ -458,7 +458,7 @@ export const AccessControl: React.FC = () => {
                     borderLineColor = "bg-red-600 animate-pulse";
                     IconComponent = AlertTriangle;
                   } else if (isHeld) {
-                    statusText = "CONTACT HELD ALARM";
+                    statusText = "Maintien alarme";
                     statusColor = "bg-control-amber/10 border-control-amber text-control-amber animate-pulse";
                     borderLineColor = "bg-control-amber";
                     IconComponent = Clock;
@@ -476,17 +476,17 @@ export const AccessControl: React.FC = () => {
                         {/* Door Header */}
                         <div className="flex items-start justify-between gap-2">
                           <div>
-                            <h3 className="text-sm font-bold text-control-text-bright uppercase tracking-wider font-mono">
+                            <h3 className="text-sm font-semibold text-control-text-bright">
                               {door.name}
                             </h3>
-                            <span className="text-[10px] text-control-text/50 font-mono">
-                              ID: {door.id.substring(0, 8)}... | site: {getSiteName(door.site_id)}
+                            <span className="text-xs text-control-text/50">
+                              {getSiteName(door.site_id)}
                             </span>
                           </div>
                           
-                          <div className={`flex items-center gap-1.5 text-[9px] px-2.5 py-1 border font-mono font-bold rounded ${statusColor}`}>
+                          <div className={`flex items-center gap-1.5 text-xs px-2.5 py-1 border font-medium rounded-full ${statusColor}`}>
                             <IconComponent className="h-3.5 w-3.5" />
-                            <span className="uppercase tracking-wider">{statusText}</span>
+                            <span>{statusText}</span>
                           </div>
                         </div>
 
@@ -498,8 +498,8 @@ export const AccessControl: React.FC = () => {
 
                         {/* Recent logs inside card */}
                         <div className="mt-4">
-                          <h4 className="text-[10px] font-bold text-control-cyan uppercase tracking-wider mb-2 border-b border-control-border/40 pb-1">
-                            Historique d'Accès Récent
+                          <h4 className="text-xs font-medium text-control-text-bright mb-2 border-b border-control-border/40 pb-1">
+                            Historique récent
                           </h4>
                           {doorRecentLogs.length === 0 ? (
                             <div className="text-[10px] text-control-text/40 italic py-1">
@@ -530,7 +530,7 @@ export const AccessControl: React.FC = () => {
                                       </div>
                                     </div>
                                     <div className="flex items-center gap-1.5 shrink-0">
-                                      <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border uppercase ${
+                                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${
                                         isLogGranted 
                                           ? "bg-control-green/5 border-control-green/30 text-control-green" 
                                           : "bg-control-red/5 border-control-red/30 text-control-red"
@@ -559,14 +559,14 @@ export const AccessControl: React.FC = () => {
                       <div className="mt-4 pt-3 border-t border-control-border/40 space-y-3">
                         {/* Operator Actions */}
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-[9px] font-mono text-control-text/40 uppercase font-bold">
+                          <span className="text-xs text-control-text/60">
                             Contrôles opérateur
                           </span>
                           
                           <button
                             onClick={() => handleToggleDoor(door)}
                             disabled={!isAdmin || loading}
-                            className={`flex items-center gap-1 text-[10px] font-bold font-mono tracking-wider px-2.5 py-1 border transition-all rounded ${
+                            className={`flex items-center gap-2 text-sm font-medium px-4 py-2 border transition-all rounded-lg min-h-[40px] ${
                               !isAdmin
                                 ? "bg-control-panel-light/30 border-control-border text-control-text/40 cursor-not-allowed opacity-55"
                                 : door.status === "open"
@@ -576,13 +576,13 @@ export const AccessControl: React.FC = () => {
                           >
                             {door.status === "open" ? (
                               <>
-                                <Lock className="h-3 w-3" />
-                                <span>VERROUILLER</span>
+                                <Lock className="h-4 w-4" />
+                                <span>Verrouiller</span>
                               </>
                             ) : (
                               <>
-                                <Unlock className="h-3 w-3" />
-                                <span>DÉVERROUILLER</span>
+                                <Unlock className="h-4 w-4" />
+                                <span>Déverrouiller</span>
                               </>
                             )}
                           </button>
@@ -670,16 +670,16 @@ export const AccessControl: React.FC = () => {
 
       {/* 2. Access History Logs view (Admin only) */}
       {activeSubTab === "history" && (
-        <div className="flex-1 flex flex-col min-h-0 p-4 font-mono text-xs">
+        <div className="flex-1 flex flex-col min-h-0 p-4 text-sm">
           
           {/* Table Filters Header */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-control-panel/20 border border-control-border p-3 mb-4 rounded-lg">
             
             {/* Date Filter */}
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] text-control-cyan uppercase font-bold tracking-wider flex items-center gap-1">
-                <Calendar className="h-3 w-3" />
-                <span>Filtrer par Date</span>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-control-text flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5 text-control-cyan" />
+                <span>Filtrer par date</span>
               </label>
               <input 
                 type="date"
@@ -690,17 +690,17 @@ export const AccessControl: React.FC = () => {
             </div>
 
             {/* Door Selector Filter */}
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] text-control-cyan uppercase font-bold tracking-wider flex items-center gap-1">
-                <Key className="h-3 w-3" />
-                <span>Filtrer par Porte</span>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-control-text flex items-center gap-1.5">
+                <Key className="h-3.5 w-3.5 text-control-cyan" />
+                <span>Filtrer par porte</span>
               </label>
               <select
                 value={filterDoorId}
                 onChange={(e) => setFilterDoorId(e.target.value)}
-                className="bg-control-bg border border-control-border text-control-text-bright p-2 text-xs focus:border-control-cyan focus:outline-none rounded"
+                className="bg-control-bg border border-control-border text-control-text-bright p-2 text-sm focus:border-control-cyan focus:outline-none rounded-lg"
               >
-                <option value="all">TOUTES LES PORTES</option>
+                <option value="all">Toutes les portes</option>
                 {doors.map(d => (
                   <option key={d.id} value={d.id}>
                     {d.name} ({getSiteName(d.site_id)})
@@ -710,20 +710,20 @@ export const AccessControl: React.FC = () => {
             </div>
 
             {/* Badge Search Input */}
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] text-control-cyan uppercase font-bold tracking-wider flex items-center gap-1">
-                <Search className="h-3 w-3" />
-                <span>Rechercher Badge</span>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-control-text flex items-center gap-1.5">
+                <Search className="h-3.5 w-3.5 text-control-cyan" />
+                <span>Rechercher par badge</span>
               </label>
               <div className="relative">
                 <input
                   type="text"
                   value={filterBadge}
                   onChange={(e) => setFilterBadge(e.target.value)}
-                  placeholder="ID de badge..."
-                  className="w-full bg-control-bg border border-control-border text-control-text-bright p-2 pr-8 text-xs focus:border-control-cyan focus:outline-none rounded placeholder-control-text/30"
+                  placeholder="Numéro de badge..."
+                  className="w-full bg-control-bg border border-control-border text-control-text-bright p-2 pr-8 text-sm focus:border-control-cyan focus:outline-none rounded-lg placeholder-control-text/30"
                 />
-                <Filter className="absolute right-2.5 top-2.5 h-3.5 w-3.5 text-control-text/40" />
+                <Filter className="absolute right-2.5 top-2.5 h-4 w-4 text-control-text/40" />
               </div>
             </div>
 
@@ -733,12 +733,12 @@ export const AccessControl: React.FC = () => {
           <div className="flex-1 border border-control-border bg-control-panel/10 overflow-auto min-h-0 rounded-lg">
             <table className="w-full text-left border-collapse">
               <thead className="sticky top-0 bg-control-panel-light z-10 border-b border-control-border">
-                <tr className="text-[10px] text-control-cyan uppercase font-bold tracking-widest">
-                  <th className="p-3">Horodatage</th>
-                  <th className="p-3">Titulaire</th>
-                  <th className="p-3">Porte / Lecteur</th>
-                  <th className="p-3">Site</th>
-                  <th className="p-3">Badge Number</th>
+                <tr className="text-xs text-control-text/70 font-medium">
+                  <th className="p-3 text-left">Horodatage</th>
+                  <th className="p-3 text-left">Titulaire</th>
+                  <th className="p-3 text-left">Porte</th>
+                  <th className="p-3 text-left">Site</th>
+                  <th className="p-3 text-left">N° Badge</th>
                   <th className="p-3 text-center">Vidéo</th>
                   <th className="p-3 text-right">Statut</th>
                 </tr>
@@ -746,8 +746,8 @@ export const AccessControl: React.FC = () => {
               <tbody className="divide-y divide-control-border/30">
                 {filteredLogs.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="p-6 text-center text-control-text/40">
-                      AUCUN LOG CORRESPONDANT AUX FILTRES ACTIFS
+                    <td colSpan={7} className="p-8 text-center text-control-text/50 text-sm">
+                      Aucun enregistrement ne correspond aux filtres actifs.
                     </td>
                   </tr>
                 ) : (
@@ -780,13 +780,13 @@ export const AccessControl: React.FC = () => {
                             </span>
                           </div>
                         </td>
-                        <td className="p-3 font-semibold uppercase text-control-text-bright">
+                        <td className="p-3 font-medium text-control-text-bright">
                           {doorName}
                         </td>
                         <td className="p-3 text-control-text/80">
                           {siteName}
                         </td>
-                        <td className="p-3 font-mono text-control-cyan">
+                        <td className="p-3 text-control-cyan">
                           {log.badge_number}
                         </td>
                         <td className="p-3 text-center">
@@ -799,20 +799,20 @@ export const AccessControl: React.FC = () => {
                           </button>
                         </td>
                         <td className="p-3 text-right whitespace-nowrap">
-                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[9px] font-bold border rounded ${
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium border rounded-full ${
                             isGranted 
                               ? "bg-control-green/10 border-control-green/30 text-control-green" 
                               : "bg-control-red/10 border-control-red/30 text-control-red"
                           }`}>
                             {isGranted ? (
                               <>
-                                <CheckCircle2 className="h-3 w-3" />
-                                <span>ACCÈS ACCORDÉ</span>
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                                <span>Accordé</span>
                               </>
                             ) : (
                               <>
-                                <XCircle className="h-3 w-3" />
-                                <span>ACCÈS REFUSÉ {log.denied_reason ? `(${log.denied_reason})` : ""}</span>
+                                <XCircle className="h-3.5 w-3.5" />
+                                <span>Refusé {log.denied_reason ? `— ${log.denied_reason}` : ""}</span>
                               </>
                             )}
                           </span>
@@ -825,13 +825,13 @@ export const AccessControl: React.FC = () => {
             </table>
           </div>
 
-          <div className="flex justify-between items-center mt-3 text-[10px] text-control-text/50">
+          <div className="flex justify-between items-center mt-3 text-xs text-control-text/50">
             <div>
-              AFFICHAGE DE {filteredLogs.length} SUR {logs.length} TRANSACTION(S)
+              {filteredLogs.length} enregistrement{filteredLogs.length !== 1 ? "s" : ""} sur {logs.length} au total
             </div>
-            <div className="flex items-center gap-1">
-              <Shield className="h-3 w-3 text-control-cyan/40" />
-              <span>CRYPTOGRAPHICALLY SIGNED TRANSACTION RECORD</span>
+            <div className="flex items-center gap-1.5">
+              <Shield className="h-3.5 w-3.5 text-control-cyan/40" />
+              <span>Journal d'audit sécurisé</span>
             </div>
           </div>
 
@@ -840,20 +840,20 @@ export const AccessControl: React.FC = () => {
 
       {/* 3. Cardholders CRUD View (Admin only) */}
       {activeSubTab === "cardholders" && (
-        <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden font-mono text-xs">
+        <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden text-sm">
           
           {/* Cardholders list sidebar */}
           <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-control-border bg-control-panel/20 p-4 shrink-0 flex flex-col min-h-0">
             <div className="flex items-center justify-between mb-4 border-b border-control-border/40 pb-2">
-              <span className="text-control-cyan font-bold uppercase tracking-wider flex items-center gap-1.5">
-                <User className="h-4.5 w-4.5" />
-                <span>Cardholders List</span>
+              <span className="text-control-text-bright font-semibold flex items-center gap-2">
+                <User className="h-4 w-4 text-control-cyan" />
+                <span>Titulaires de badges</span>
               </span>
               <button
                 onClick={handleAddNewClick}
-                className="flex items-center gap-1 border border-control-cyan/60 hover:border-control-cyan bg-control-cyan/10 text-control-cyan text-[10px] py-1 px-2.5 rounded font-bold uppercase cursor-pointer transition"
+                className="flex items-center gap-1.5 border border-control-cyan/60 hover:border-control-cyan bg-control-cyan/10 text-control-cyan text-sm py-1.5 px-3 rounded-lg font-medium cursor-pointer transition min-h-[36px]"
               >
-                <UserPlus className="h-3.5 w-3.5" />
+                <UserPlus className="h-4 w-4" />
                 <span>Nouveau</span>
               </button>
             </div>
@@ -873,7 +873,7 @@ export const AccessControl: React.FC = () => {
             {/* List */}
             <div className="flex-1 overflow-y-auto space-y-1.5 pr-1">
               {filteredCardholders.length === 0 ? (
-                <div className="text-center text-control-text/40 py-6 italic border border-dashed border-control-border">
+                <div className="text-center text-control-text/50 py-8 text-sm border border-control-border rounded-xl bg-control-panel/20">
                   Aucun titulaire enregistré
                 </div>
               ) : (
@@ -1074,7 +1074,7 @@ export const AccessControl: React.FC = () => {
                       alt={`${selectedCh.first_name} ${selectedCh.last_name}`}
                       className="h-28 w-28 rounded-xl border border-control-border object-cover bg-control-bg shadow-inner shadow-black/40"
                     />
-                    <span className="text-[9px] font-bold px-2 py-0.5 rounded border bg-control-cyan/10 border-control-cyan/30 text-control-cyan font-mono uppercase tracking-wider">
+                    <span className="text-xs font-medium px-2.5 py-1 rounded-full border bg-control-cyan/10 border-control-cyan/30 text-control-cyan">
                       {selectedCh.access_group || "Standard"}
                     </span>
                   </div>
@@ -1082,57 +1082,57 @@ export const AccessControl: React.FC = () => {
                   {/* Informational file */}
                   <div className="flex-1 space-y-4">
                     <div>
-                      <h2 className="text-lg font-bold text-control-text-bright uppercase tracking-wider font-mono">
+                      <h2 className="text-xl font-semibold text-control-text-bright">
                         {selectedCh.first_name} {selectedCh.last_name}
                       </h2>
-                      <p className="text-[10px] text-control-text/40 font-mono mt-0.5">
-                        ID: {selectedCh.id}
+                      <p className="text-xs text-control-text/40 mt-0.5">
+                        Réf. {selectedCh.id.substring(0, 12)}...
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-b border-control-border/40 py-3 text-[10px] space-y-1.5 sm:space-y-0">
-                      <div className="space-y-1.5">
-                        <div className="flex items-center gap-1.5 text-control-text/60">
-                          <Briefcase className="h-3.5 w-3.5 text-control-cyan/70 shrink-0" />
-                          <span>Société:</span>
-                          <span className="text-control-text-bright font-bold">{selectedCh.company || "N/A"}</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-b border-control-border/40 py-3 text-sm">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-control-text/70">
+                          <Briefcase className="h-4 w-4 text-control-cyan/70 shrink-0" />
+                          <span>Société :</span>
+                          <span className="text-control-text-bright font-medium">{selectedCh.company || "N/A"}</span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-control-text/60">
-                          <Mail className="h-3.5 w-3.5 text-control-cyan/70 shrink-0" />
-                          <span>Contact:</span>
-                          <span className="text-control-text-bright font-semibold truncate">{selectedCh.email || "N/A"}</span>
+                        <div className="flex items-center gap-2 text-control-text/70">
+                          <Mail className="h-4 w-4 text-control-cyan/70 shrink-0" />
+                          <span>Contact :</span>
+                          <span className="text-control-text-bright font-medium truncate">{selectedCh.email || "N/A"}</span>
                         </div>
                       </div>
 
-                      <div className="space-y-1.5">
-                        <div className="flex items-center gap-1.5 text-control-text/60">
-                          <Key className="h-3.5 w-3.5 text-control-cyan/70 shrink-0" />
-                          <span>Badge ID:</span>
-                          <span className="text-control-cyan font-mono font-bold uppercase">{selectedCh.badge_number || "Aucun"}</span>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-control-text/70">
+                          <Key className="h-4 w-4 text-control-cyan/70 shrink-0" />
+                          <span>N° Badge :</span>
+                          <span className="text-control-cyan font-medium">{selectedCh.badge_number || "Aucun"}</span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-control-text/60">
-                          <Clock className="h-3.5 w-3.5 text-control-cyan/70 shrink-0" />
-                          <span>Plage horaire:</span>
-                          <span className="text-control-amber font-bold">{selectedCh.schedule || "24h/24"}</span>
+                        <div className="flex items-center gap-2 text-control-text/70">
+                          <Clock className="h-4 w-4 text-control-cyan/70 shrink-0" />
+                          <span>Plage horaire :</span>
+                          <span className="text-control-amber font-medium">{selectedCh.schedule || "24h/24"}</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex justify-between items-center pt-2">
+                    <div className="flex justify-between items-center pt-2 gap-3">
                       <button
                         onClick={() => handleDeleteCardholder(selectedCh.id)}
-                        className="flex items-center gap-1.5 border border-control-red/20 bg-control-red/5 hover:bg-control-red/10 text-control-red py-1.5 px-3.5 tracking-wider rounded font-bold uppercase transition cursor-pointer"
+                        className="flex items-center gap-2 border border-control-red/30 bg-control-red/5 hover:bg-control-red/10 text-control-red py-2 px-4 rounded-lg font-medium transition cursor-pointer min-h-[40px]"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
-                        <span>SUPPRIMER</span>
+                        <Trash2 className="h-4 w-4" />
+                        <span>Supprimer</span>
                       </button>
 
                       <button
                         onClick={() => handleEditClick(selectedCh)}
-                        className="flex items-center gap-1.5 border border-control-border bg-control-panel-light hover:bg-control-panel-light/80 text-control-cyan py-1.5 px-3.5 tracking-wider rounded font-bold uppercase transition cursor-pointer hover:border-control-cyan/50"
+                        className="flex items-center gap-2 border border-control-border bg-control-panel-light hover:bg-control-panel text-control-cyan py-2 px-4 rounded-lg font-medium transition cursor-pointer hover:border-control-cyan/50 min-h-[40px]"
                       >
-                        <Edit className="h-3.5 w-3.5" />
-                        <span>MODIFIER</span>
+                        <Edit className="h-4 w-4" />
+                        <span>Modifier</span>
                       </button>
                     </div>
                   </div>
@@ -1140,11 +1140,11 @@ export const AccessControl: React.FC = () => {
               </div>
             ) : (
               /* Placeholder details */
-              <div className="h-full flex flex-col items-center justify-center text-center p-8 border border-dashed border-control-border rounded-xl bg-control-panel/5 select-none">
-                <FileText className="h-12 w-12 text-control-text/20 mb-3" />
-                <h3 className="text-sm font-bold uppercase text-control-text-bright">Fiche Titulaire</h3>
-                <p className="text-[10px] text-control-text/50 max-w-xs mt-1 leading-relaxed">
-                  Sélectionnez un titulaire de badge dans la liste de gauche ou cliquez sur "Nouveau" pour enregistrer un profil d'accès.
+              <div className="h-full flex flex-col items-center justify-center text-center p-8 border border-control-border rounded-xl bg-control-panel/5 select-none">
+                <FileText className="h-12 w-12 text-control-text/20 mb-4" />
+                <h3 className="text-base font-semibold text-control-text-bright">Fiche titulaire</h3>
+                <p className="text-sm text-control-text/50 max-w-xs mt-2 leading-relaxed">
+                  Sélectionnez un titulaire de badge dans la liste ou cliquez sur « Nouveau » pour créer un profil d'accès.
                 </p>
               </div>
             )}

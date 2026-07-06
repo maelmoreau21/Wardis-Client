@@ -277,7 +277,7 @@ export const HomePortal: React.FC = () => {
           <div>
             <h2 className="text-lg font-bold text-control-text-bright tracking-tight flex items-center gap-2">
               Wardis Security Desk
-              <span className="rounded-full border border-control-cyan/25 bg-control-cyan/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-control-cyan font-mono">
+              <span className="rounded-full border border-control-cyan/25 bg-control-cyan/10 px-2.5 py-0.5 text-xs font-medium text-control-cyan">
                 Accueil
               </span>
             </h2>
@@ -294,8 +294,8 @@ export const HomePortal: React.FC = () => {
           </div>
           <div className="text-xs">
             <p className="font-bold text-control-text-bright">{user?.email || "operator@wardis.com"}</p>
-            <p className="text-[9px] text-control-text/60 uppercase tracking-wider font-semibold">
-              Rôle: {user?.role || "OPERATOR"}
+            <p className="text-xs text-control-text/70 uppercase tracking-wider font-medium">
+              Rôle : {user?.role || "OPERATOR"}
             </p>
           </div>
         </div>
@@ -318,14 +318,14 @@ export const HomePortal: React.FC = () => {
 
         <button
           onClick={() => setShowConfig(!showConfig)}
-          className={`flex items-center gap-2 border px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition cursor-pointer ${
+          className={`flex items-center gap-2 border px-4 py-2.5 text-sm font-medium rounded-xl transition cursor-pointer min-h-[40px] ${
             showConfig 
               ? "bg-control-cyan border-control-cyan text-black" 
               : "bg-control-panel border-control-border text-control-text hover:text-control-text-bright hover:border-control-border/80"
           }`}
         >
           <Sliders className="h-4 w-4" />
-          <span>Configure Dashboard</span>
+          <span>Personnaliser</span>
         </button>
 
         {/* Configuration Overlay Panel */}
@@ -338,7 +338,7 @@ export const HomePortal: React.FC = () => {
               </button>
             </div>
             
-            <div className="flex flex-col gap-3 text-[10px] uppercase font-bold tracking-wider text-control-text">
+            <div className="flex flex-col gap-3 text-sm font-medium text-control-text">
               <label className="flex items-center justify-between cursor-pointer py-1">
                 <span>{t("widgetSystemHealth")}</span>
                 <input
@@ -381,17 +381,17 @@ export const HomePortal: React.FC = () => {
             </div>
 
             <div className="border-t border-control-border pt-3">
-              <div className="text-[9px] uppercase tracking-wider text-control-text/60 mb-2 font-bold">Colonnes Layout</div>
-              <div className="flex bg-control-panel-light p-0.5 rounded border border-control-border gap-1 font-mono text-[9px] font-bold">
+              <div className="text-xs font-medium text-control-text/60 mb-2">Disposition en colonnes</div>
+              <div className="flex bg-control-panel-light p-0.5 rounded border border-control-border gap-1 text-sm font-medium">
                 {[1, 2, 3].map(c => (
                   <button
                     key={c}
                     onClick={() => changeColumns(c)}
-                    className={`flex-1 py-1 rounded transition text-center cursor-pointer ${
+                    className={`flex-1 py-1.5 rounded transition text-center cursor-pointer ${
                       dbConfig.columns === c ? "bg-control-cyan text-black" : "text-control-text hover:text-control-text-bright"
                     }`}
                   >
-                    {c} Col
+                    {c} colonne{c > 1 ? "s" : ""}
                   </button>
                 ))}
               </div>
@@ -410,7 +410,7 @@ export const HomePortal: React.FC = () => {
           {dbConfig.showHealth && (
             <div className="wardis-panel p-5 flex flex-col justify-between h-96">
               <div className="flex items-center justify-between border-b border-control-border/60 pb-2 mb-3">
-                <span className="text-xs font-bold text-control-text-bright uppercase tracking-wider flex items-center gap-1.5">
+                <span className="text-sm font-semibold text-control-text-bright flex items-center gap-2">
                   <Cpu className="h-4 w-4 text-control-cyan" />
                   {t("widgetSystemHealth")}
                 </span>
@@ -420,8 +420,8 @@ export const HomePortal: React.FC = () => {
               <div className="flex-1 flex flex-col justify-around gap-4 py-2">
                 {/* Storage Health */}
                 <div className="flex flex-col gap-1.5">
-                  <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider">
-                    <span className="flex items-center gap-1 text-control-text/80">
+                  <div className="flex justify-between text-xs font-medium">
+                    <span className="flex items-center gap-1.5 text-control-text/80">
                       <HardDrive className="h-3.5 w-3.5" />
                       {t("storageUsed")}
                     </span>
@@ -435,13 +435,13 @@ export const HomePortal: React.FC = () => {
                 {/* Cameras Status breakdown */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-control-panel-light border border-control-border/50 rounded-xl p-3 flex flex-col items-center">
-                    <span className="text-[9px] uppercase tracking-wider text-control-text/70">{t("camerasOnline")}</span>
+                    <span className="text-xs text-control-text/70">{t("camerasOnline")}</span>
                     <span className="text-xl font-bold text-control-green mt-1">
                       {cameras.filter(c => c.statut === "active").length}
                     </span>
                   </div>
                   <div className="bg-control-panel-light border border-control-border/50 rounded-xl p-3 flex flex-col items-center">
-                    <span className="text-[9px] uppercase tracking-wider text-control-text/70">{t("camerasOffline")}</span>
+                    <span className="text-xs text-control-text/70">{t("camerasOffline")}</span>
                     <span className="text-xl font-bold text-control-text-bright mt-1">
                       {cameras.filter(c => c.statut === "inactive").length}
                     </span>
@@ -453,11 +453,11 @@ export const HomePortal: React.FC = () => {
                   <div className="flex items-center gap-2.5">
                     <ShieldAlert className="h-5 w-5 text-control-red animate-pulse" />
                     <div className="text-left">
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-control-text-bright">{t("alarmsToday")}</div>
-                      <div className="text-[8px] uppercase tracking-widest text-control-text/60 font-mono">Dernières 24h</div>
+                      <div className="text-sm font-semibold text-control-text-bright">{t("alarmsToday")}</div>
+                      <div className="text-xs text-control-text/60">Dernières 24h</div>
                     </div>
                   </div>
-                  <span className="text-2xl font-bold text-control-red font-mono px-3 bg-control-red/10 border border-control-red/20 rounded-lg">
+                  <span className="text-2xl font-bold text-control-red px-3 bg-control-red/10 border border-control-red/20 rounded-lg">
                     {alarmsTodayCount}
                   </span>
                 </div>
@@ -469,11 +469,11 @@ export const HomePortal: React.FC = () => {
           {dbConfig.showFavorites && (
             <div className="wardis-panel p-5 flex flex-col justify-between h-96">
               <div className="flex items-center justify-between border-b border-control-border/60 pb-2 mb-3">
-                <span className="text-xs font-bold text-control-text-bright uppercase tracking-wider flex items-center gap-1.5">
+                <span className="text-sm font-semibold text-control-text-bright flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-control-cyan" />
                   {t("widgetFavorites")}
                 </span>
-                <span className="text-[9px] font-mono font-bold text-control-cyan bg-control-cyan/10 border border-control-cyan/20 px-2 rounded-full">
+                <span className="text-xs font-medium text-control-cyan bg-control-cyan/10 border border-control-cyan/20 px-2 py-0.5 rounded-full">
                   {favorites.length}
                 </span>
               </div>
@@ -492,26 +492,26 @@ export const HomePortal: React.FC = () => {
                         <div className="flex items-center gap-2 font-semibold">
                           <span className={`h-2 w-2 rounded-full ${cam.statut === "active" ? "bg-control-green" : "bg-control-gray"}`} />
                           <div className="text-left leading-tight">
-                            <div className="text-[11px] font-bold text-control-text-bright uppercase truncate max-w-[150px]">{cam.nom}</div>
-                            <div className="text-[8px] font-mono text-control-text/60 truncate max-w-[150px]">{cam.url_rtsp}</div>
+                            <div className="text-sm font-medium text-control-text-bright truncate max-w-[150px]">{cam.nom}</div>
+                            <div className="text-xs text-control-text/50 truncate max-w-[150px]">{cam.url_rtsp}</div>
                           </div>
                         </div>
 
                         <div className="flex items-center gap-1.5">
                           <button
                             onClick={() => setPreviewCamera({ id: cam.id, nom: cam.nom })}
-                            className="bg-control-cyan/15 hover:bg-control-cyan/35 text-control-cyan border border-control-cyan/20 rounded p-1.5 cursor-pointer text-[9px] font-bold uppercase transition flex items-center gap-1"
+                            className="bg-control-cyan/15 hover:bg-control-cyan/35 text-control-cyan border border-control-cyan/20 rounded-lg p-2 cursor-pointer text-sm transition flex items-center gap-1.5 min-h-[36px]"
                             title="Aperçu Direct"
                           >
-                            <Eye className="h-3 w-3" />
-                            <span className="hidden sm:inline">Aperçu</span>
+                            <Eye className="h-4 w-4" />
+                            <span className="hidden sm:inline text-xs font-medium">Aperçu</span>
                           </button>
                           <button
                             onClick={() => openTab("live", "taskLive", { focusCameraId: cam.id }, true)}
-                            className="bg-control-panel border border-control-border hover:border-control-cyan/60 rounded p-1.5 cursor-pointer text-[9px] text-control-text-bright hover:text-control-cyan transition"
+                            className="bg-control-panel border border-control-border hover:border-control-cyan/60 rounded-lg p-2 cursor-pointer text-control-text-bright hover:text-control-cyan transition min-h-[36px] flex items-center"
                             title="Ouvrir dans la grille"
                           >
-                            <Play className="h-3 w-3 fill-current" />
+                            <Play className="h-4 w-4 fill-current" />
                           </button>
                         </div>
                       </div>
@@ -523,15 +523,15 @@ export const HomePortal: React.FC = () => {
                         <div className="flex items-center gap-2 font-semibold">
                           <span className={`h-2 w-2 rounded-full ${door.status === "open" ? "bg-control-green animate-pulse" : "bg-control-gray"}`} />
                           <div className="text-left leading-tight">
-                            <div className="text-[11px] font-bold text-control-text-bright uppercase truncate max-w-[150px]">{door.name}</div>
-                            <div className="text-[8px] font-mono text-control-text/60 uppercase">{door.status}</div>
+                            <div className="text-sm font-medium text-control-text-bright truncate max-w-[150px]">{door.name}</div>
+                            <div className="text-xs text-control-text/50">{door.status === "open" ? "Ouverte" : "Fermée"}</div>
                           </div>
                         </div>
 
                         <button
                           disabled={doorUnlockingId === door.id}
                           onClick={() => handleQuickUnlock(door.id)}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider border rounded transition cursor-pointer disabled:opacity-50 ${
+                          className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium border rounded-lg transition cursor-pointer disabled:opacity-50 min-h-[36px] ${
                             doorUnlockingId === door.id
                               ? "bg-control-green border-control-green text-black font-extrabold"
                               : door.status === "open"

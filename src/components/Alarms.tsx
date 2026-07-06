@@ -227,7 +227,7 @@ export const Alarms: React.FC = () => {
   }, [events, filterType, filterSite, filterSeverity, sensorMap]);
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-control-bg text-control-text font-mono relative">
+    <div className="flex-1 flex flex-col min-h-0 bg-control-bg text-control-text relative">
       
       {/* Top Banner for Critical Live Notifications */}
       {notification && (
@@ -238,10 +238,10 @@ export const Alarms: React.FC = () => {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-extrabold text-control-red uppercase tracking-widest font-mono">
-                  🚨 LIVE ALARME INTRUSION
+                <span className="text-sm font-bold text-control-red">
+                  🚨 Alarme intrusion en cours
                 </span>
-                <span className="text-[9px] px-1 bg-control-red text-control-text-bright font-bold">
+                <span className="text-xs px-2 py-0.5 rounded-full bg-control-red text-control-text-bright font-semibold">
                   {notification.severity}
                 </span>
               </div>
@@ -253,48 +253,53 @@ export const Alarms: React.FC = () => {
           <div className="flex gap-2">
             <button
               onClick={() => setMuted(!muted)}
-              className="px-2.5 py-1 border border-control-border bg-control-panel hover:bg-control-panel-light text-control-text cursor-pointer flex items-center gap-1.5 text-xs"
+              className="px-3 py-2 border border-control-border rounded-lg bg-control-panel hover:bg-control-panel-light text-control-text cursor-pointer flex items-center gap-2 text-sm min-h-[40px]"
             >
-              {muted ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
-              <span>{muted ? "ACTIVER SON" : "COUPER SON"}</span>
+              {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+              <span>{muted ? "Activer le son" : "Couper le son"}</span>
             </button>
             <button
               onClick={() => setNotification(null)}
-              className="px-3 py-1 bg-control-red hover:bg-control-red/90 text-control-text-bright border border-control-red/50 font-bold text-xs cursor-pointer"
+              className="px-4 py-2 bg-control-red hover:bg-control-red/90 text-control-text-bright rounded-lg font-semibold text-sm cursor-pointer min-h-[40px]"
             >
-              ACQUITTER NOTIF
+              Acquitter
             </button>
           </div>
         </div>
       )}
 
       {/* Main Subbar Header */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between border-b border-control-border bg-control-panel/40 p-3 gap-3 shrink-0">
-        <div className="flex items-center gap-2">
-          <Shield className="h-4.5 w-4.5 text-control-red" />
-          <h2 className="text-sm font-bold uppercase tracking-wider text-control-text-bright">
-            Console de Contrôle des Alarmes & Evénements
-          </h2>
-          <span className={`text-[9px] px-1.5 py-0.5 font-mono ml-2 ${
-            sseConnected 
-              ? "bg-control-green/10 border border-control-green/30 text-control-green" 
-              : "bg-control-red/10 border border-control-red/30 text-control-red"
-          }`}>
-            REAL-TIME WEBSOCKET: {sseConnected ? "CONNECTED" : "DISCONNECTED"}
-          </span>
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between border-b border-control-border bg-control-panel/40 px-4 py-3 gap-3 shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-control-red/10 border border-control-red/20">
+            <Shield className="h-5 w-5 text-control-red" />
+          </div>
+          <div>
+            <h2 className="text-base font-semibold text-control-text-bright leading-tight">
+              Console des alarmes
+            </h2>
+            <span className={`inline-flex items-center gap-1 text-xs font-medium mt-0.5 ${
+              sseConnected 
+                ? "text-control-green" 
+                : "text-control-red"
+            }`}>
+              <span className={`h-1.5 w-1.5 rounded-full ${sseConnected ? "bg-control-green" : "bg-control-red"}`} />
+              {sseConnected ? "Temps réel connecté" : "Déconnecté"}
+            </span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 text-xs">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => setMuted(!muted)}
-            className={`p-2 border transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`px-3 py-2 border rounded-lg transition-all cursor-pointer flex items-center gap-2 text-sm min-h-[40px] ${
               muted 
                 ? "border-control-red/30 text-control-red bg-control-red/5" 
                 : "border-control-cyan/30 text-control-cyan bg-control-cyan/5"
             }`}
           >
             {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-            <span>{muted ? "MUET" : "AUDIO EN SERVICE"}</span>
+            <span>{muted ? "Son désactivé" : "Son activé"}</span>
           </button>
 
           <button
@@ -302,7 +307,7 @@ export const Alarms: React.FC = () => {
               await Promise.all([fetchZones(), fetchSensors(), fetchActiveAlarms(), fetchEvents()]);
             }}
             disabled={loading}
-            className="p-2 border border-control-border bg-control-panel hover:bg-control-panel-light text-control-cyan hover:text-control-cyan-bright transition-all disabled:opacity-50 cursor-pointer"
+            className="p-2 border border-control-border rounded-lg bg-control-panel hover:bg-control-panel-light text-control-cyan transition-all disabled:opacity-50 cursor-pointer min-h-[40px] min-w-[40px] flex items-center justify-center"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
           </button>
@@ -318,22 +323,22 @@ export const Alarms: React.FC = () => {
           {/* Active Alarms Section */}
           <div className="bg-control-panel/50 border border-control-border rounded-xl p-4 flex flex-col shadow-xs min-h-[300px]">
             <div className="flex items-center justify-between mb-4 border-b border-control-border/60 pb-2">
-              <h3 className="text-xs font-bold uppercase tracking-widest text-control-red flex items-center gap-1.5">
-                <AlertTriangle className="h-4 w-4" />
-                File des Alarmes Actives ({enrichedAlarms.length})
+              <h3 className="text-sm font-semibold text-control-red flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5" />
+                Alarmes actives ({enrichedAlarms.length})
               </h3>
-              <span className="text-[10px] text-control-text/40">
-                TRIEE PAR SEVERITE & ESCALADE
+              <span className="text-xs text-control-text/50">
+                Triées par sévérité
               </span>
             </div>
 
             {enrichedAlarms.length === 0 ? (
-              <div className="flex-1 flex flex-col items-center justify-center text-center p-6 border border-dashed border-control-border bg-control-panel-light/10 rounded-xl">
-                <Shield className="h-10 w-10 text-control-green/40 mb-2" />
-                <p className="text-xs text-control-green font-semibold uppercase tracking-wider">
+              <div className="flex-1 flex flex-col items-center justify-center text-center p-6 border border-control-border rounded-xl bg-control-panel-light/10">
+                <Shield className="h-10 w-10 text-control-green/40 mb-3" />
+                <p className="text-sm text-control-green font-semibold">
                   Aucun incident actif
                 </p>
-                <p className="text-[10px] text-control-text/40 mt-1 max-w-[240px]">
+                <p className="text-xs text-control-text/50 mt-2 max-w-[280px] leading-relaxed">
                   Toutes les alarmes d'intrusion et de contrôle d'accès de l'établissement sont résolues ou acquittées.
                 </p>
               </div>
@@ -366,29 +371,29 @@ export const Alarms: React.FC = () => {
                     >
                       <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
                         <div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[8px] px-1.5 py-0.5 bg-control-border text-control-text/60 font-semibold rounded font-mono">
-                              ID: {alarm.id.substring(0, 8)}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-xs px-2 py-0.5 bg-control-panel-light rounded text-control-text/60 font-medium">
+                              #{alarm.id.substring(0, 8)}
                             </span>
-                            <span className={`text-[8px] px-1.5 py-0.5 border font-semibold tracking-wider uppercase ${severityBadge}`}>
-                              {alarm.severity}
+                            <span className={`text-xs px-2 py-0.5 rounded-full border font-semibold ${severityBadge}`}>
+                              {({"CRITICAL":"Critique","HIGH":"Haute","MEDIUM":"Moyenne","LOW":"Basse"} as Record<string,string>)[alarm.severity] ?? alarm.severity}
                             </span>
                             {alarm.isEscalated && (
-                              <span className="text-[9px] px-1.5 py-0.5 bg-control-red text-control-text-bright font-bold animate-pulse">
-                                ESCALADEE ({alarm.elapsedSec}s)
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-control-red text-control-text-bright font-bold animate-pulse">
+                                Escaladée ({alarm.elapsedSec}s)
                               </span>
                             )}
                           </div>
-                          <h4 className="text-xs font-bold text-control-text-bright mt-1.5 uppercase">
+                          <h4 className="text-sm font-semibold text-control-text-bright mt-1.5">
                             {alarm.zoneName}
                           </h4>
-                          <p className="text-[10px] text-control-text/60 mt-0.5">
+                          <p className="text-xs text-control-text/60 mt-0.5">
                             Déclencheur : <strong className="text-control-cyan">{alarm.sensorName}</strong> ({alarm.sensorType})
                           </p>
                         </div>
-                        <div className="text-right text-[10px] text-control-text/50 self-stretch sm:self-auto flex sm:flex-col justify-between items-center sm:items-end">
+                        <div className="text-right text-xs text-control-text/50 self-stretch sm:self-auto flex sm:flex-col justify-between items-center sm:items-end">
                           <span>Déclenché : {new Date(alarm.declenchee_a).toLocaleTimeString()}</span>
-                          <span className="mt-1 text-[9px] text-control-red font-semibold">
+                          <span className="mt-1 text-xs text-control-red font-medium">
                             En attente depuis {alarm.elapsedSec}s
                           </span>
                         </div>
@@ -397,9 +402,9 @@ export const Alarms: React.FC = () => {
                       {/* Live Camera Thumbnail overlay */}
                       {alarm.camera && (
                         <div className="w-full h-40 bg-control-bg border border-control-border relative overflow-hidden mt-1 flex items-center justify-center rounded">
-                          <div className="absolute top-2 left-2 z-10 px-2 py-0.5 bg-black/60 text-[9px] border border-control-border text-control-green flex items-center gap-1">
+                          <div className="absolute top-2 left-2 z-10 px-2.5 py-1 rounded-full bg-black/70 text-xs border border-control-green/30 text-control-green flex items-center gap-1.5">
                             <span className="h-1.5 w-1.5 rounded-full bg-control-green animate-pulse" />
-                            <span>LIVE PREVIEW: {alarm.camera.nom}</span>
+                            <span>{alarm.camera.nom} — En direct</span>
                           </div>
                           <CameraPlayer 
                             cameraId={alarm.camera.id}
@@ -413,9 +418,9 @@ export const Alarms: React.FC = () => {
 
                       {/* Display warning if escalated */}
                       {alarm.isEscalated && (
-                        <div className="p-2 border border-control-red/40 bg-control-red/5 text-[9px] text-control-red flex items-center gap-1.5">
-                          <AlertCircle className="h-3.5 w-3.5 animate-bounce shrink-0" />
-                          <span>ALERTE RETARD D'ACQUITTEMENT : Le délai de {escalationDelay}s est dépassé. Escalade active vers le Superviseur.</span>
+                        <div className="p-3 border border-control-red/40 bg-control-red/5 rounded-lg text-xs text-control-red flex items-center gap-2">
+                          <AlertCircle className="h-4 w-4 animate-bounce shrink-0" />
+                          <span>Retard d'acquittement : le délai de {escalationDelay}s est dépassé. Escalade en cours vers le superviseur.</span>
                         </div>
                       )}
 
@@ -424,27 +429,27 @@ export const Alarms: React.FC = () => {
                         <div className="mt-3 pt-3 border-t border-control-border/60 flex flex-col gap-3" onClick={e => e.stopPropagation()}>
                           
                           {/* Tabs for Action Type */}
-                          <div className="flex border-b border-control-border/60 text-[10px] uppercase font-bold">
+                          <div className="flex gap-1 border-b border-control-border/60 pb-2">
                             <button
                               onClick={() => setActionTab("ack")}
-                              className={`px-3 py-1.5 border-t border-x border-transparent cursor-pointer ${
-                                actionTab === "ack" ? "border-control-border bg-control-panel-light/30 text-control-cyan" : "text-control-text/60"
+                              className={`px-3 py-1.5 rounded-lg text-sm font-medium cursor-pointer transition-all ${
+                                actionTab === "ack" ? "bg-control-cyan/10 text-control-cyan border border-control-cyan/30" : "text-control-text/60 hover:text-control-text border border-transparent"
                               }`}
                             >
                               Acquitter
                             </button>
                             <button
                               onClick={() => setActionTab("transfer")}
-                              className={`px-3 py-1.5 border-t border-x border-transparent cursor-pointer ${
-                                actionTab === "transfer" ? "border-control-border bg-control-panel-light/30 text-control-cyan" : "text-control-text/60"
+                              className={`px-3 py-1.5 rounded-lg text-sm font-medium cursor-pointer transition-all ${
+                                actionTab === "transfer" ? "bg-control-cyan/10 text-control-cyan border border-control-cyan/30" : "text-control-text/60 hover:text-control-text border border-transparent"
                               }`}
                             >
                               Transférer
                             </button>
                             <button
                               onClick={() => setActionTab("snooze")}
-                              className={`px-3 py-1.5 border-t border-x border-transparent cursor-pointer ${
-                                actionTab === "snooze" ? "border-control-border bg-control-panel-light/30 text-control-cyan" : "text-control-text/60"
+                              className={`px-3 py-1.5 rounded-lg text-sm font-medium cursor-pointer transition-all ${
+                                actionTab === "snooze" ? "bg-control-cyan/10 text-control-cyan border border-control-cyan/30" : "text-control-text/60 hover:text-control-text border border-transparent"
                               }`}
                             >
                               Reporter
@@ -455,7 +460,7 @@ export const Alarms: React.FC = () => {
                           {actionTab === "ack" && (
                             <div className="space-y-2">
                               <div className="flex flex-col gap-1">
-                                <label className="text-[9px] uppercase tracking-wider text-control-text/70">
+                                <label className="text-xs font-medium text-control-text/80">
                                   Motif de l'acquittement {requireAckReason && <span className="text-control-red">*</span>}
                                 </label>
                                 <input
@@ -468,9 +473,9 @@ export const Alarms: React.FC = () => {
                               </div>
                               <button
                                 onClick={() => handleAcknowledge(alarm.id)}
-                                className="w-full py-1.5 bg-control-green hover:bg-control-green/90 text-white font-bold text-xs uppercase tracking-wider cursor-pointer rounded flex items-center justify-center gap-1"
+                                className="w-full py-2.5 bg-control-green hover:bg-control-green/90 text-white font-semibold text-sm cursor-pointer rounded-lg flex items-center justify-center gap-2 min-h-[40px]"
                               >
-                                <Check className="h-3.5 w-3.5" />
+                                <Check className="h-4 w-4" />
                                 <span>Confirmer l'acquittement</span>
                               </button>
                             </div>
@@ -480,7 +485,7 @@ export const Alarms: React.FC = () => {
                             <div className="space-y-2">
                               <div className="grid grid-cols-2 gap-2">
                                 <div className="flex flex-col gap-1">
-                                  <label className="text-[9px] uppercase tracking-wider text-control-text/70">Destinataire (Agent/Groupe) *</label>
+                                  <label className="text-xs font-medium text-control-text/80">Destinataire (agent ou groupe) *</label>
                                   <input
                                     type="text"
                                     placeholder="ex: Patrouille 2, Superviseur..."
@@ -490,7 +495,7 @@ export const Alarms: React.FC = () => {
                                   />
                                 </div>
                                 <div className="flex flex-col gap-1">
-                                  <label className="text-[9px] uppercase tracking-wider text-control-text/70">Raison du transfert</label>
+                                  <label className="text-xs font-medium text-control-text/80">Raison du transfert</label>
                                   <input
                                     type="text"
                                     placeholder="Raison du transfert..."
@@ -502,9 +507,9 @@ export const Alarms: React.FC = () => {
                               </div>
                               <button
                                 onClick={() => handleTransfer(alarm.id)}
-                                className="w-full py-1.5 bg-control-cyan hover:bg-control-cyan/90 text-white font-bold text-xs uppercase tracking-wider cursor-pointer rounded flex items-center justify-center gap-1"
+                                className="w-full py-2.5 bg-control-cyan hover:bg-control-cyan/90 text-white font-semibold text-sm cursor-pointer rounded-lg flex items-center justify-center gap-2 min-h-[40px]"
                               >
-                                <ArrowRight className="h-3.5 w-3.5" />
+                                <ArrowRight className="h-4 w-4" />
                                 <span>Transférer l'alarme</span>
                               </button>
                             </div>
@@ -514,7 +519,7 @@ export const Alarms: React.FC = () => {
                             <div className="space-y-2">
                               <div className="grid grid-cols-3 gap-2">
                                 <div className="flex flex-col gap-1 col-span-1">
-                                  <label className="text-[9px] uppercase tracking-wider text-control-text/70">Durée (minutes)</label>
+                                  <label className="text-xs font-medium text-control-text/80">Durée (minutes)</label>
                                   <select
                                     value={snoozeMinutes}
                                     onChange={e => setSnoozeMinutes(Number(e.target.value))}
@@ -527,7 +532,7 @@ export const Alarms: React.FC = () => {
                                   </select>
                                 </div>
                                 <div className="flex flex-col gap-1 col-span-2">
-                                  <label className="text-[9px] uppercase tracking-wider text-control-text/70">Justification du report</label>
+                                  <label className="text-xs font-medium text-control-text/80">Justification du report</label>
                                   <input
                                     type="text"
                                     placeholder="ex: Vérification sur place en cours..."
@@ -539,10 +544,10 @@ export const Alarms: React.FC = () => {
                               </div>
                               <button
                                 onClick={() => handleSnooze(alarm.id)}
-                                className="w-full py-1.5 bg-control-amber hover:bg-control-amber/90 text-white font-bold text-xs uppercase tracking-wider cursor-pointer rounded flex items-center justify-center gap-1"
+                                className="w-full py-2.5 bg-control-amber hover:bg-control-amber/90 text-white font-semibold text-sm cursor-pointer rounded-lg flex items-center justify-center gap-2 min-h-[40px]"
                               >
-                                <Clock className="h-3.5 w-3.5" />
-                                <span>Reporter l'alarme (Mettre en sommeil)</span>
+                                <Clock className="h-4 w-4" />
+                                <span>Reporter l'alarme</span>
                               </button>
                             </div>
                           )}
@@ -559,9 +564,9 @@ export const Alarms: React.FC = () => {
           {/* Setup simulator control board */}
           <div className="bg-control-panel/50 border border-control-border rounded-xl p-4 flex-1 flex flex-col shadow-xs min-h-[220px]">
             <div className="flex items-center justify-between mb-4 border-b border-control-border/60 pb-2">
-              <h3 className="text-xs font-bold uppercase tracking-widest text-control-cyan flex items-center gap-1.5">
-                <Terminal className="h-3.5 w-3.5" />
-                Simulateur d'Intrusion & Banc d'Essai
+              <h3 className="text-sm font-semibold text-control-cyan flex items-center gap-2">
+                <Terminal className="h-4 w-4" />
+                Simulateur de capteurs
               </h3>
             </div>
             
@@ -572,25 +577,25 @@ export const Alarms: React.FC = () => {
                 const isTriggered = sensor.statut === "declenche";
 
                 return (
-                  <div key={sensor.id} className="bg-control-panel-light/20 border border-control-border p-2.5 flex items-center justify-between text-xs font-mono">
-                    <div className="flex items-center gap-2">
-                      <div className={`p-1.5 border ${
-                        isTriggered ? "border-control-red bg-control-red/10 text-control-red animate-pulse" : "border-control-border text-control-text/40"
+                  <div key={sensor.id} className="bg-control-panel-light/20 border border-control-border rounded-lg p-3 flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2.5">
+                      <div className={`p-2 rounded-lg border ${
+                        isTriggered ? "border-control-red/50 bg-control-red/10 text-control-red" : "border-control-border text-control-text/40"
                       }`}>
-                        {sensor.type === "mouvement" ? <Radio className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                        {sensor.type === "mouvement" ? <Radio className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </div>
                       <div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-semibold text-control-text-bright">{sensor.nom}</span>
-                          <span className="text-[7px] px-1 bg-control-border text-control-text/60 uppercase">{sensor.type}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-control-text-bright">{sensor.nom}</span>
+                          <span className="text-xs px-1.5 py-0.5 rounded bg-control-panel-light text-control-text/60">{sensor.type}</span>
                         </div>
-                        <span className="text-[9px] text-control-text/40">Zone : {zoneObj?.nom || "Inconnue"}</span>
+                        <span className="text-xs text-control-text/50">Zone : {zoneObj?.nom || "Inconnue"}</span>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <span className={`text-[9px] font-bold ${isTriggered ? "text-control-red" : "text-control-green"}`}>
-                        {isTriggered ? "● DECLENCHÉ" : "○ OK"}
+                      <span className={`text-xs font-medium ${isTriggered ? "text-control-red" : "text-control-green"}`}>
+                        {isTriggered ? "● Déclenché" : "○ Normal"}
                       </span>
                       <button
                         onClick={async () => {
@@ -598,13 +603,13 @@ export const Alarms: React.FC = () => {
                             await triggerSensor(sensor.id);
                           } catch (err) {}
                         }}
-                        className={`px-2 py-1 border text-[9px] font-bold tracking-wider cursor-pointer rounded transition-all ${
+                        className={`px-3 py-1.5 border rounded-lg text-sm font-medium cursor-pointer transition-all min-h-[36px] ${
                           isArmed 
                             ? "border-control-red/60 bg-control-red/5 hover:bg-control-red/10 text-control-red" 
                             : "border-control-border bg-control-panel hover:bg-control-panel-light text-control-text"
                         }`}
                       >
-                        SIMULER
+                        Simuler
                       </button>
                     </div>
                   </div>
@@ -620,21 +625,21 @@ export const Alarms: React.FC = () => {
           {/* Header & filters */}
           <div className="border-b border-control-border/60 pb-3 flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold uppercase tracking-widest text-control-cyan flex items-center gap-1.5">
+              <h3 className="text-sm font-semibold text-control-cyan flex items-center gap-2">
                 <Activity className="h-4 w-4" />
-                Journal des événements en direct
+                Journal en direct
               </h3>
               <span className="h-2 w-2 rounded-full bg-control-cyan animate-pulse" />
             </div>
 
             {/* Filter controls */}
-            <div className="grid grid-cols-3 gap-1.5 text-[9px]">
+            <div className="grid grid-cols-3 gap-1.5 text-xs">
               <div>
-                <label className="text-[8px] text-control-text/50 uppercase block mb-1">Type d'event</label>
+                <label className="text-xs text-control-text/60 block mb-1">Type</label>
                 <select
                   value={filterType}
                   onChange={e => setFilterType(e.target.value as any)}
-                  className="w-full bg-control-bg border border-control-border text-control-text px-1 py-1 outline-none"
+                  className="w-full bg-control-bg border border-control-border rounded-lg text-control-text px-2 py-1.5 outline-none text-xs"
                 >
                   <option value="all">Tout</option>
                   <option value="alarm">Alarmes</option>
@@ -644,11 +649,11 @@ export const Alarms: React.FC = () => {
               </div>
 
               <div>
-                <label className="text-[8px] text-control-text/50 uppercase block mb-1">Sévérité</label>
+                <label className="text-xs text-control-text/60 block mb-1">Sévérité</label>
                 <select
                   value={filterSeverity}
                   onChange={e => setFilterSeverity(e.target.value as any)}
-                  className="w-full bg-control-bg border border-control-border text-control-text px-1 py-1 outline-none"
+                  className="w-full bg-control-bg border border-control-border rounded-lg text-control-text px-2 py-1.5 outline-none text-xs"
                 >
                   <option value="all">Toutes</option>
                   <option value="CRITICAL">Critique</option>
@@ -659,11 +664,11 @@ export const Alarms: React.FC = () => {
               </div>
 
               <div>
-                <label className="text-[8px] text-control-text/50 uppercase block mb-1">Site</label>
+                <label className="text-xs text-control-text/60 block mb-1">Site</label>
                 <select
                   value={filterSite}
                   onChange={e => setFilterSite(e.target.value)}
-                  className="w-full bg-control-bg border border-control-border text-control-text px-1 py-1 outline-none"
+                  className="w-full bg-control-bg border border-control-border rounded-lg text-control-text px-2 py-1.5 outline-none text-xs"
                 >
                   <option value="all">Tous</option>
                   <option value="a0000000-0000-0000-0000-000000000001">HQ Paris</option>
@@ -672,17 +677,17 @@ export const Alarms: React.FC = () => {
             </div>
 
             {/* AutoScroll control */}
-            <div className="flex items-center justify-between text-[9px] text-control-text/60">
-              <label className="flex items-center gap-1 cursor-pointer">
+            <div className="flex items-center justify-between text-xs text-control-text/60">
+              <label className="flex items-center gap-1.5 cursor-pointer">
                 <input 
                   type="checkbox" 
                   checked={autoscroll} 
                   onChange={e => setAutoscroll(e.target.checked)} 
                   className="rounded border-control-border bg-control-bg text-control-cyan accent-control-cyan focus:outline-none" 
                 />
-                <span>Défilement automatique (Auto-scroll)</span>
+                <span>Défilement automatique</span>
               </label>
-              <span>Affichés : {filteredEvents.length}</span>
+              <span>{filteredEvents.length} affiché{filteredEvents.length !== 1 ? "s" : ""}</span>
             </div>
           </div>
 
@@ -706,11 +711,11 @@ export const Alarms: React.FC = () => {
                 return (
                   <div 
                     key={evt.id} 
-                    className="p-2 border border-control-border bg-control-panel-light/10 text-[10px] leading-relaxed flex flex-col gap-1 font-mono rounded"
+                    className="p-3 border border-control-border rounded-lg bg-control-panel-light/10 text-sm leading-relaxed flex flex-col gap-1"
                   >
-                    <div className="flex justify-between items-center text-[8px] text-control-text/40">
+                    <div className="flex justify-between items-center text-xs text-control-text/50">
                       <span>{new Date(evt.timestamp).toLocaleString()}</span>
-                      <span className={`px-1 border font-bold uppercase ${badgeColor}`}>
+                      <span className={`px-2 py-0.5 rounded-full border text-xs font-medium ${badgeColor}`}>
                         {evt.event_type}
                       </span>
                     </div>
@@ -724,9 +729,9 @@ export const Alarms: React.FC = () => {
 
           {/* Settings panel (Admins only) */}
           <div className="border-t border-control-border/60 pt-3">
-            <h4 className="text-[10px] font-bold uppercase tracking-wider text-control-cyan flex items-center gap-1 mb-2">
-              <Sliders className="h-3.5 w-3.5" />
-              Configuration d'Administration (Escalade & Motif)
+            <h4 className="text-sm font-semibold text-control-cyan flex items-center gap-2 mb-3">
+              <Sliders className="h-4 w-4" />
+              Paramètres d'escalade
             </h4>
             <div className="grid grid-cols-2 gap-3 text-[10px]">
               <div className="flex flex-col gap-1 justify-center">
@@ -743,7 +748,7 @@ export const Alarms: React.FC = () => {
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="text-[9px] text-control-text/60">Délai d'escalade (secondes)</label>
+                <label className="text-xs text-control-text/70 font-medium">Délai d'escalade (secondes)</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="number"
@@ -759,8 +764,8 @@ export const Alarms: React.FC = () => {
               </div>
             </div>
             {!isAdmin && (
-              <p className="text-[8px] text-control-red mt-1.5 uppercase font-semibold">
-                ⚠️ Modification restreinte aux Administrateurs uniquement.
+              <p className="text-xs text-control-red/80 mt-2">
+                ⚠️ Modification réservée aux administrateurs.
               </p>
             )}
           </div>

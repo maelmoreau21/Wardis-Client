@@ -169,18 +169,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
 
         {/* Context panel — only shown for relevant modules */}
         {activeTab?.type === "live" && (
-          <ContextPanel title="Camera Directory" defaultWidth={230}>
+          <ContextPanel title="Répertoire des caméras" defaultWidth={230}>
             <SurveillanceTree />
           </ContextPanel>
         )}
 
         {activeTab?.type === "access" && (
-          <ContextPanel title="Zone & Doors" defaultWidth={220}>
+          <ContextPanel title="Zones et portes" defaultWidth={220}>
             <div className="flex flex-col gap-2">
-              <div className="text-[10px] text-control-text/60 uppercase tracking-widest font-bold">Doors & Gates</div>
+              <div className="text-xs font-medium text-control-text/60">Portes et portails</div>
               <div className="border border-control-border bg-control-panel-light/30 rounded p-2 space-y-2">
                 {doors.length === 0 ? (
-                  <div className="text-[10px] text-control-text/40 italic">No doors registered.</div>
+                  <div className="text-xs text-control-text/50 italic">Aucune porte enregistrée.</div>
                 ) : (
                   doors.map((door) => (
                     <div key={door.id} className="flex items-center justify-between text-[10px]">
@@ -188,8 +188,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
                         <span className={`h-1.5 w-1.5 rounded-full ${door.status === "open" ? "bg-control-green animate-pulse" : "bg-control-gray"}`} />
                         {door.name}
                       </span>
-                      <span className="text-[8px] uppercase font-bold bg-control-panel-light px-1 border border-control-border rounded text-control-text/80">
-                        {door.status}
+                      <span className="text-xs font-medium bg-control-panel-light px-2 py-0.5 border border-control-border rounded-full text-control-text/80">
+                        {door.status === "open" ? "Ouverte" : "Fermée"}
                       </span>
                     </div>
                   ))
@@ -200,20 +200,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
         )}
 
         {activeTab?.type === "alarms" && (
-          <ContextPanel title="Alarm Filters" defaultWidth={220}>
+          <ContextPanel title="Filtres alarmes" defaultWidth={220}>
             <div className="flex flex-col gap-2">
-              <div className="text-[10px] text-control-text/60 uppercase tracking-widest font-bold">Priority Levels</div>
-              <div className="space-y-1.5 text-[10px] uppercase font-bold">
+              <div className="text-xs font-medium text-control-text/60">Niveaux de priorité</div>
+              <div className="space-y-1.5 text-xs font-medium">
                 <div className="flex justify-between items-center p-1.5 border border-control-red/20 bg-control-red/5 rounded text-control-red">
-                  <span>Critical Alarms</span>
+                  <span>Alarmes critiques</span>
                   <span className="font-bold bg-control-red/25 px-1.5 rounded text-[9px]">{metrics.alerts}</span>
                 </div>
                 <div className="flex justify-between items-center p-1.5 border border-control-amber/20 bg-control-amber/5 rounded text-control-amber">
-                  <span>Warnings</span>
+                  <span>Avertissements</span>
                   <span className="font-bold bg-control-amber/25 px-1.5 rounded text-[9px]">0</span>
                 </div>
                 <div className="flex justify-between items-center p-1.5 border border-control-border bg-control-panel-light rounded text-control-text">
-                  <span>Resolved Events</span>
+                  <span>Événements résolus</span>
                   <span className="font-bold bg-control-panel-light px-1.5 rounded text-[9px]">12</span>
                 </div>
               </div>
@@ -243,7 +243,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
                   <button
                     key={sub}
                     onClick={() => setAdminSubTab(sub)}
-                    className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
+                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all cursor-pointer ${
                       adminSubTab === sub
                         ? "bg-control-cyan/15 text-control-cyan border border-control-cyan/30"
                         : "text-control-text hover:bg-control-panel-light hover:text-control-text-bright border border-transparent"
@@ -260,17 +260,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
                   <div className="flex flex-col gap-6">
                     <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                       <div className="wardis-card p-6">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-control-cyan">{t("activeCameras")}</div>
+                        <div className="text-xs font-medium text-control-cyan mb-1">{t("activeCameras")}</div>
                         <div className="mt-2 text-3xl font-bold text-control-text-bright">{metrics.activeCameras}</div>
                         <div className="mt-1 text-xs text-control-text">{t("camerasSynced")}</div>
                       </div>
                       <div className="wardis-card p-6">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-control-cyan">{t("doors")}</div>
+                        <div className="text-xs font-medium text-control-cyan mb-1">{t("doors")}</div>
                         <div className="mt-2 text-3xl font-bold text-control-text-bright">{metrics.openDoors}/{doors.length}</div>
                         <div className="mt-1 text-xs text-control-text">{t("doorsStatusDesc")}</div>
                       </div>
                       <div className="wardis-card p-6">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-control-cyan">{t("activeAlarms" as any)}</div>
+                        <div className="text-xs font-medium text-control-cyan mb-1">{t("activeAlarms" as any)}</div>
                         <div className="mt-2 text-3xl font-bold text-control-text-bright">{metrics.alerts}</div>
                         <div className="mt-1 text-xs text-control-text">{t("alertsPriority" as any)}</div>
                       </div>
@@ -279,16 +279,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
                     <section className="grid gap-6 xl:grid-cols-12">
                       <div className="xl:col-span-6 wardis-panel p-6">
                         <div className="flex items-center justify-between border-b border-control-border/60 pb-3 mb-4">
-                          <h3 className="text-sm font-bold text-control-text-bright uppercase tracking-wider">{t("serviceStatus")}</h3>
-                          <span className="rounded bg-control-panel-light px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-control-text border border-control-border">
+                          <h3 className="text-sm font-semibold text-control-text-bright">{t("serviceStatus")}</h3>
+                          <span className="rounded bg-control-panel-light px-2 py-0.5 text-xs font-semibold text-control-text border border-control-border">
                             {t("latency", { latency })}
                           </span>
                         </div>
-                        <div className="space-y-3.5 text-xs text-control-text">
+                        <div className="space-y-3.5 text-sm text-control-text">
                           {[["generalStatus", "statusStable"], ["natsServer", "natsConnected"], ["accessGateway", "gatewayOnline"], ["videoServer", "serverActive"]].map(([label, status]) => (
                             <div key={label} className="flex items-center justify-between">
                               <span>{t(label as any)}</span>
-                              <span className="font-semibold text-control-green uppercase tracking-wider text-[10px] bg-control-green/10 border border-control-green/20 px-2 py-0.5 rounded">{t(status as any)}</span>
+                              <span className="font-semibold text-control-green text-xs bg-control-green/10 border border-control-green/20 px-2 py-0.5 rounded">{t(status as any)}</span>
                             </div>
                           ))}
                         </div>
@@ -296,7 +296,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ theme, onToggleTheme }) =>
 
                       <div className="xl:col-span-6 wardis-panel p-6">
                         <div className="flex items-center justify-between border-b border-control-border/60 pb-3 mb-4">
-                          <h3 className="text-sm font-bold text-control-text-bright uppercase tracking-wider">{t("systemJournal")}</h3>
+                          <h3 className="text-sm font-semibold text-control-text-bright">{t("systemJournal")}</h3>
                           <Terminal className="h-4 w-4 text-control-cyan" />
                         </div>
                         <div className="space-y-2.5 font-mono text-[10px] text-control-text leading-relaxed">
