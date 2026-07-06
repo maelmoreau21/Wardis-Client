@@ -20,18 +20,150 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  ZoomIn,
-  ZoomOut,
   Gamepad,
   Camera as CameraIcon,
   Bookmark,
-  Mic,
-  MicOff,
   Maximize2,
   Volume2,
   VolumeX,
-  Save
+  Save,
+  Play,
+  Pause,
+  Radio,
+  Loader2,
 } from "lucide-react";
+
+// ==========================================
+// 0. TilePlaybackBar — per-tile overlay bar
+// ==========================================
+const MAX_SEEK_SECONDS = 24 * 3600; // 24 h lookback
+
+interface TilePlaybackBarProps {
+  isPlayback: boolean;
+  seekOffsetSeconds: number; // 0 = live; > 0 = seconds in the past
+  isLoading: boolean;
+  isPaused: boolean;
+  onSeek: (offsetSeconds: number) => void;
+  onTogglePlayPause: () => void;
+  onBackToLive: () => void;
+}
+
+const TilePlaybackBar: React.FC<TilePlaybackBarProps> = ({
+  isPlayback,
+  seekOffsetSeconds,
+  isLoading,
+  isPaused,
+  onSeek,
+  onTogglePlayPause,
+  onBackToLive,
+}) => {
+  const [isDragging, setIsDragging] = useState(false);
+
+  const seekTime = new Date(Date.now() - seekOffsetSeconds * 1000);
+  const timeLabel =
+    !isPlayback || seekOffsetSeconds === 0
+      ? "En direct"
+      : seekTime.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+
+  const pct = (seekOffsetSeconds / MAX_SEEK_SECONDS) * 100;
+
+  return (
+    <div
+      className={`absolute bottom-0 left-0 right-0 z-40 transition-opacity duration-200 ${
+        isPlayback || isDragging ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+      }`}
+      onClick={(e) => e.stopPropagation()}
+      onDoubleClick={(e) => e.stopPropagation()}
+    >
+      {/* Seek loading bar */}
+      {isLoading && (
+        <div className="absolute bottom-full left-0 right-0 h-0.5 bg-control-border/30 overflow-hidden">
+          <div
+            className="h-full bg-control-cyan absolute"
+            style={{
+              animation: "wardis-seek-slide 0.9s ease-in-out infinite",
+              width: "45%",
+            }}
+          />
+        </div>
+      )}
+
+      <div className="bg-black/85 backdrop-blur-sm border-t border-white/5 px-3 pt-2 pb-2.5 flex flex-col gap-2">
+        {/* Scrubber timeline */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-control-text/50 font-mono shrink-0">−24h</span>
+          <input
+            type="range"
+            min={0}
+            max={MAX_SEEK_SECONDS}
+            step={30}
+            value={seekOffsetSeconds}
+            onChange={(e) => onSeek(Number(e.target.value))}
+            onMouseDown={() => setIsDragging(true)}
+            onMouseUp={() => setIsDragging(false)}
+            onTouchStart={() => setIsDragging(true)}
+            onTouchEnd={() => setIsDragging(false)}
+            className="flex-1 h-1 cursor-pointer rounded-full"
+            style={{
+              accentColor: "var(--color-control-cyan)",
+              background: `linear-gradient(to left, var(--color-control-cyan) ${pct}%, var(--color-control-border) ${pct}%)`,
+            }}
+          />
+          <span className="text-xs text-control-green font-mono shrink-0">Live</span>
+        </div>
+
+        {/* Controls row */}
+        <div className="flex items-center gap-2">
+          {/* Play / Pause */}
+          <button
+            onClick={onTogglePlayPause}
+            className="flex items-center justify-center h-9 w-9 rounded-md bg-control-panel-light hover:bg-control-cyan/20 text-control-text-bright hover:text-control-cyan border border-control-border hover:border-control-cyan/50 transition-all shrink-0"
+            title={isPaused ? "Lecture" : "Pause"}
+          >
+            {isLoading ? (
+              <Loader2 className="h-4.5 w-4.5 animate-spin text-control-cyan" />
+            ) : isPaused ? (
+              <Play className="h-4.5 w-4.5" />
+            ) : (
+              <Pause className="h-4.5 w-4.5" />
+            )}
+          </button>
+
+          {/* Timestamp */}
+          <div className="flex-1 text-center">
+            <span
+              className={`font-mono text-xs font-semibold tracking-wide ${
+                isPlayback && seekOffsetSeconds > 0
+                  ? "text-control-amber"
+                  : "text-control-green"
+              }`}
+            >
+              {timeLabel}
+            </span>
+          </div>
+
+          {/* Back to live */}
+          <button
+            onClick={onBackToLive}
+            className={`flex items-center gap-1.5 h-9 px-3 rounded-md border text-xs font-medium transition-all shrink-0 ${
+              isPlayback && seekOffsetSeconds > 0
+                ? "border-control-red/60 bg-control-red/10 text-control-red hover:bg-control-red/20 cursor-pointer"
+                : "border-control-green/40 bg-control-green/5 text-control-green opacity-60 cursor-default"
+            }`}
+            title="Revenir au direct"
+          >
+            <Radio className="h-3.5 w-3.5" />
+            <span>Direct</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // ==========================================
 // 1. CameraPlayer Component (WHEP WebRTC & HLS)
@@ -49,6 +181,10 @@ export interface CameraPlayerProps {
   ptzSupported?: boolean;
   onTogglePTZ?: () => void;
   isPTZOpen?: boolean;
+  /** null/0 = live; positive = seek N seconds into the past within HLS buffer */
+  seekOffsetSeconds?: number | null;
+  /** Pause/play the stream */
+  isPausedPlayback?: boolean;
 }
 
 export const CameraPlayer: React.FC<CameraPlayerProps> = ({ 
@@ -61,15 +197,16 @@ export const CameraPlayer: React.FC<CameraPlayerProps> = ({
   onClear, 
   onDoubleClick,
   onClick,
-  ptzSupported = false,
-  onTogglePTZ,
-  isPTZOpen = false
+  ptzSupported: _ptzSupported = false,
+  onTogglePTZ: _onTogglePTZ,
+  isPTZOpen = false,
+  seekOffsetSeconds = null,
+  isPausedPlayback = false,
 }) => {
   const [status, setStatus] = useState<"connecting" | "playing" | "error" | "no-signal" | "paused">("connecting");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [showConfig, setShowConfig] = useState(false);
   const [isAudioActive, setIsAudioActive] = useState(false);
-  const [isMicActive, setIsMicActive] = useState(false);
   const [bookmarkSuccess, setBookmarkSuccess] = useState(false);
   
   // Digital Zoom state
@@ -397,6 +534,35 @@ export const CameraPlayer: React.FC<CameraPlayerProps> = ({
     };
   }, [cameraId, statut, retryTrigger, isZoomed, isVisible]);
 
+  // Seek within HLS buffer when seekOffsetSeconds changes
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (seekOffsetSeconds === null || seekOffsetSeconds === 0) {
+      // Return to live edge
+      if (video.seekable.length > 0) {
+        video.currentTime = video.seekable.end(video.seekable.length - 1);
+      }
+      return;
+    }
+    if (video.seekable.length > 0) {
+      const liveEdge = video.seekable.end(video.seekable.length - 1);
+      const target = Math.max(video.seekable.start(0), liveEdge - seekOffsetSeconds);
+      video.currentTime = target;
+    }
+  }, [seekOffsetSeconds]);
+
+  // Pause / resume the video stream
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (isPausedPlayback) {
+      video.pause();
+    } else {
+      video.play().catch(() => {});
+    }
+  }, [isPausedPlayback]);
+
   const handleRetry = () => {
     setRetryTrigger(prev => prev + 1);
   };
@@ -534,68 +700,42 @@ export const CameraPlayer: React.FC<CameraPlayerProps> = ({
         </div>
       </div>
 
-      {/* Hover toolbar visible on hover */}
+      {/* Quick actions — top-right compact row, visible on hover */}
       {status === "playing" && (
-        <div 
+        <div
           onClick={(e) => e.stopPropagation()}
           onDoubleClick={(e) => e.stopPropagation()}
-          className="absolute bottom-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 bg-control-bg/90 border border-control-cyan/40 p-1 rounded-lg backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-200"
+          className="absolute top-9 right-2 z-30 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
         >
           <button
             onClick={handleCaptureSnapshot}
-            className="p-1.5 hover:bg-control-cyan/20 text-control-text hover:text-control-cyan rounded transition-colors"
+            className="flex items-center justify-center h-7 w-7 rounded bg-black/60 hover:bg-control-cyan/20 text-control-text hover:text-control-cyan border border-white/10 hover:border-control-cyan/40 transition-all"
             title="Capture d'image"
           >
             <CameraIcon className="h-3.5 w-3.5" />
           </button>
           <button
             onClick={handleSaveBookmark}
-            className="p-1.5 hover:bg-control-cyan/20 text-control-text hover:text-control-cyan rounded transition-colors"
+            className="flex items-center justify-center h-7 w-7 rounded bg-black/60 hover:bg-control-cyan/20 text-control-text hover:text-control-cyan border border-white/10 hover:border-control-cyan/40 transition-all"
             title="Poser un signet"
           >
             <Bookmark className="h-3.5 w-3.5" />
           </button>
           <button
-            onClick={() => setZoomScale(s => Math.min(8, s * 1.5))}
-            className="p-1.5 hover:bg-control-cyan/20 text-control-text hover:text-control-cyan rounded transition-colors"
-            title="Zoom +"
-          >
-            <ZoomIn className="h-3.5 w-3.5" />
-          </button>
-          <button
-            onClick={() => { setZoomScale(1); setZoomOffset({ x: 0, y: 0 }); }}
-            className="p-1.5 hover:bg-control-cyan/20 text-control-text hover:text-control-cyan rounded transition-colors"
-            title="Zoom Reset"
-          >
-            <ZoomOut className="h-3.5 w-3.5" />
-          </button>
-          {ptzSupported && onTogglePTZ && (
-            <button
-              onClick={onTogglePTZ}
-              className={`p-1.5 hover:bg-control-cyan/20 rounded transition-colors ${isPTZOpen ? "text-control-cyan bg-control-cyan/10" : "text-control-text hover:text-control-cyan"}`}
-              title="Contrôle PTZ"
-            >
-              <Gamepad className="h-3.5 w-3.5" />
-            </button>
-          )}
-          <button
             onClick={() => setIsAudioActive(!isAudioActive)}
-            className="p-1.5 hover:bg-control-cyan/20 text-control-text hover:text-control-cyan rounded transition-colors"
+            className={`flex items-center justify-center h-7 w-7 rounded border transition-all ${
+              isAudioActive
+                ? "bg-control-cyan/10 border-control-cyan/40 text-control-cyan"
+                : "bg-black/60 border-white/10 text-control-text hover:text-control-cyan hover:bg-control-cyan/20 hover:border-control-cyan/40"
+            }`}
             title={isAudioActive ? "Couper l'audio" : "Activer l'audio"}
           >
-            {isAudioActive ? <Volume2 className="h-3.5 w-3.5 text-control-cyan" /> : <VolumeX className="h-3.5 w-3.5" />}
-          </button>
-          <button
-            onClick={() => setIsMicActive(!isMicActive)}
-            className="p-1.5 hover:bg-control-cyan/20 text-control-text hover:text-control-cyan rounded transition-colors"
-            title={isMicActive ? "Désactiver micro" : "Activer micro (Audio bidirectionnel)"}
-          >
-            {isMicActive ? <Mic className="h-3.5 w-3.5 text-control-cyan" /> : <MicOff className="h-3.5 w-3.5" />}
+            {isAudioActive ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
           </button>
           <button
             onClick={onDoubleClick}
-            className="p-1.5 hover:bg-control-cyan/20 text-control-text hover:text-control-cyan rounded transition-colors"
-            title="Agrandir / Plein écran"
+            className="flex items-center justify-center h-7 w-7 rounded bg-black/60 hover:bg-control-cyan/20 text-control-text hover:text-control-cyan border border-white/10 hover:border-control-cyan/40 transition-all"
+            title="Agrandir"
           >
             <Maximize2 className="h-3.5 w-3.5" />
           </button>
@@ -787,7 +927,7 @@ export const CameraPlayer: React.FC<CameraPlayerProps> = ({
 // ==========================================
 // 2. Main LiveView Component
 // ==========================================
-type LayoutType = "1x1" | "2x2" | "3x3" | "4x4" | "1+5" | "1+7" | "libre";
+type LayoutType = "1x1" | "2x2" | "3x3" | "4x4" | "1+5" | "1+7" | "libre" | "auto";
 
 interface SavedNamedView {
   name: string;
@@ -845,6 +985,52 @@ export const LiveView: React.FC = () => {
   // Active PTZ panel display trackers
   const [ptzOpenSlots, setPtzOpenSlots] = useState<{ [slotIdx: number]: boolean }>({});
 
+  // ── Per-tile independent playback state ──────────────────────────────────
+  type TilePlaybackState = {
+    isPlayback: boolean;
+    seekOffsetSeconds: number;
+    isLoading: boolean;
+    isPaused: boolean;
+  };
+  const [tilePlaybackStates, setTilePlaybackStates] = useState<Record<number, TilePlaybackState>>({});
+
+  const getTilePlayback = (idx: number): TilePlaybackState =>
+    tilePlaybackStates[idx] ?? { isPlayback: false, seekOffsetSeconds: 0, isLoading: false, isPaused: false };
+
+  const handleTileSeek = (idx: number, offsetSeconds: number) => {
+    setTilePlaybackStates((prev) => ({
+      ...prev,
+      [idx]: {
+        ...(prev[idx] ?? { isPlayback: false, seekOffsetSeconds: 0, isLoading: false, isPaused: false }),
+        isPlayback: offsetSeconds > 0,
+        seekOffsetSeconds: offsetSeconds,
+        isLoading: true,
+      },
+    }));
+    // Clear loading indicator after seek completes
+    setTimeout(() => {
+      setTilePlaybackStates((prev) => {
+        if (!prev[idx]) return prev;
+        return { ...prev, [idx]: { ...prev[idx], isLoading: false } };
+      });
+    }, 700);
+  };
+
+  const handleTileBackToLive = (idx: number) => {
+    setTilePlaybackStates((prev) => ({
+      ...prev,
+      [idx]: { isPlayback: false, seekOffsetSeconds: 0, isLoading: false, isPaused: false },
+    }));
+  };
+
+  const handleToggleTilePlayPause = (idx: number) => {
+    setTilePlaybackStates((prev) => {
+      const cur = prev[idx] ?? { isPlayback: false, seekOffsetSeconds: 0, isLoading: false, isPaused: false };
+      return { ...prev, [idx]: { ...cur, isPaused: !cur.isPaused } };
+    });
+  };
+  // ─────────────────────────────────────────────────────────────────────────
+
   // Dragging states
   const [draggedFreeTileId, setDraggedFreeTileId] = useState<string | null>(null);
   const [freeTileResizingId, setFreeTileResizingId] = useState<string | null>(null);
@@ -885,6 +1071,7 @@ export const LiveView: React.FC = () => {
     if (l === "4x4") return 16;
     if (l === "1+5") return 6;
     if (l === "1+7") return 8;
+    if (l === "auto") return Math.min(cameras.length, 16); // auto-assign all cameras
     return 4; // free mode initialized with 4
   };
 
@@ -1214,14 +1401,15 @@ export const LiveView: React.FC = () => {
         
         {/* Layout Selectors */}
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[10px] text-control-text/60 uppercase tracking-widest font-bold pr-1">Mises En Page:</span>
+          <span className="text-xs text-control-text/60 font-semibold pr-1">Grille :</span>
           {([
-            { key: "1x1", label: "1x1" },
-            { key: "2x2", label: "2x2" },
-            { key: "3x3", label: "3x3" },
-            { key: "4x4", label: "4x4" },
-            { key: "1+5", label: "1+5" },
-            { key: "1+7", label: "1+7" },
+            { key: "auto", label: "Auto" },
+            { key: "1x1",  label: "1×1"  },
+            { key: "2x2",  label: "2×2"  },
+            { key: "3x3",  label: "3×3"  },
+            { key: "4x4",  label: "4×4"  },
+            { key: "1+5",  label: "1+5"  },
+            { key: "1+7",  label: "1+7"  },
             { key: "libre", label: "Libre" },
           ] as { key: LayoutType; label: string }[]).map((opt) => (
             <button
@@ -1387,144 +1575,190 @@ export const LiveView: React.FC = () => {
                 })}
               </div>
             ) : (
-              
-              /* Regular structured layouts */
-              <div 
-                className={`flex-1 min-h-0 grid gap-3 ${
-                  layout === "1x1" ? "grid-cols-1" :
-                  layout === "2x2" ? "grid-cols-2" :
-                  layout === "3x3" ? "grid-cols-3" :
-                  layout === "4x4" ? "grid-cols-4" :
-                  layout === "1+5" ? "grid-1-plus-5" :
-                  layout === "1+7" ? "grid-1-plus-7" : "grid-cols-2"
-                }`}
-              >
-                {/* Custom styling injected dynamically for non-standard grid structures */}
-                <style dangerouslySetInnerHTML={{__html: `
-                  .grid-1-plus-5 {
-                    display: grid;
-                    grid-template-columns: repeat(3, 1fr);
-                    grid-template-rows: repeat(3, 1fr);
-                  }
-                  .grid-1-plus-5 > :nth-child(1) {
-                    grid-column: span 2;
-                    grid-row: span 2;
-                  }
-                  .grid-1-plus-7 {
-                    display: grid;
-                    grid-template-columns: repeat(4, 1fr);
-                    grid-template-rows: repeat(4, 1fr);
-                  }
-                  .grid-1-plus-7 > :nth-child(1) {
-                    grid-column: span 3;
-                    grid-row: span 3;
-                  }
-                `}} />
+              /* Regular structured layouts + Auto-sizing grid */
+              (() => {
+                // In "auto" mode: render only assigned slots, no empty tiles
+                const totalSlots = getSlotCount(layout);
+                const indicesToRender: number[] =
+                  layout === "auto"
+                    ? slotAssignments
+                        .map((id, i) => (id !== null ? i : -1))
+                        .filter((i) => i !== -1)
+                        .slice(0, 16)
+                    : Array.from({ length: totalSlots }, (_, i) => i);
 
-                {Array.from({ length: getSlotCount(layout) }).map((_, idx) => {
-                  const assignedCamId = slotAssignments[idx];
-                  const camera = cameras.find((c) => c.id === assignedCamId);
-                  const isSelected = getActiveSlotIndex() === idx;
-                  const isAlarmActive = assignedCamId ? isCameraInAlarm(assignedCamId) : false;
+                // Auto-compute column count based on the number of tiles to render
+                const autoGridCols = (n: number) =>
+                  n <= 1 ? "grid-cols-1"
+                  : n <= 2 ? "grid-cols-2"
+                  : n <= 4 ? "grid-cols-2"
+                  : n <= 9 ? "grid-cols-3"
+                  : "grid-cols-4";
 
-                  return (
-                    <div
-                      key={idx}
-                      draggable={!!assignedCamId}
-                      onDragStart={(e) => handleTileDragStart(e, idx)}
-                      onDragOver={(e) => e.preventDefault()}
-                      onDrop={(e) => handleTileDrop(e, idx)}
-                      className={`relative w-full h-full rounded-xl transition-all ${
-                        isAlarmActive 
-                          ? "ring-2 ring-control-red shadow-[0_0_15px_rgba(239,68,68,0.7)] animate-pulse" 
-                          : ""
-                      }`}
-                    >
-                      {assignedCamId && camera ? (
-                        <CameraPlayer
-                          cameraId={assignedCamId}
-                          cameraNom={camera.nom}
-                          statut={camera.statut}
-                          isZoomed={false}
-                          isSelected={isSelected}
-                          aspectRatioMode={aspectRatios[idx]}
-                          onClear={() => handleClearSlot(idx)}
-                          onClick={() => setSelectedSlotIndex(idx)}
-                          onDoubleClick={() => setZoomedSlotIndex(idx)}
-                          ptzSupported={camera.ptz_supported}
-                          onTogglePTZ={() => setPtzOpenSlots(prev => ({ ...prev, [idx]: !prev[idx] }))}
-                          isPTZOpen={!!ptzOpenSlots[idx]}
-                        />
-                      ) : (
-                        
-                        /* Empty slot target drop zone */
-                        <div 
-                          onClick={() => setSelectedSlotIndex(idx)}
-                          className={`relative w-full h-full bg-control-panel/40 border transition-all flex flex-col items-center justify-center p-4 text-center select-none font-mono rounded-xl ${
-                            isSelected 
-                              ? "border-control-cyan shadow-[0_0_15px_rgba(0,240,255,0.4)] z-10" 
-                              : "border-dashed border-control-border hover:border-control-cyan/40"
+                const gridClass =
+                  layout === "1x1"  ? "grid-cols-1"
+                  : layout === "2x2"  ? "grid-cols-2"
+                  : layout === "3x3"  ? "grid-cols-3"
+                  : layout === "4x4"  ? "grid-cols-4"
+                  : layout === "1+5" ? "grid-1-plus-5"
+                  : layout === "1+7" ? "grid-1-plus-7"
+                  : autoGridCols(indicesToRender.length); // auto / libre fallback
+
+                return (
+                  <div className={`flex-1 min-h-0 grid gap-1 ${gridClass}`}>
+                    {/* Custom grid templates + seek animation */}
+                    <style dangerouslySetInnerHTML={{ __html: `
+                      .grid-1-plus-5 {
+                        display: grid;
+                        grid-template-columns: repeat(3, 1fr);
+                        grid-template-rows: repeat(3, 1fr);
+                      }
+                      .grid-1-plus-5 > :nth-child(1) {
+                        grid-column: span 2;
+                        grid-row: span 2;
+                      }
+                      .grid-1-plus-7 {
+                        display: grid;
+                        grid-template-columns: repeat(4, 1fr);
+                        grid-template-rows: repeat(4, 1fr);
+                      }
+                      .grid-1-plus-7 > :nth-child(1) {
+                        grid-column: span 3;
+                        grid-row: span 3;
+                      }
+                      @keyframes wardis-seek-slide {
+                        0%   { left: -45%; }
+                        100% { left: 100%; }
+                      }
+                    ` }} />
+
+                    {indicesToRender.map((idx) => {
+                      const assignedCamId = slotAssignments[idx];
+                      const camera = cameras.find((c) => c.id === assignedCamId);
+                      const isSelected = getActiveSlotIndex() === idx;
+                      const isAlarmActive = assignedCamId ? isCameraInAlarm(assignedCamId) : false;
+                      const tilePlayback = getTilePlayback(idx);
+
+                      return (
+                        <div
+                          key={idx}
+                          draggable={!!assignedCamId}
+                          onDragStart={(e) => handleTileDragStart(e, idx)}
+                          onDragOver={(e) => e.preventDefault()}
+                          onDrop={(e) => handleTileDrop(e, idx)}
+                          className={`group relative w-full h-full rounded-lg transition-all overflow-hidden ${
+                            isAlarmActive
+                              ? "ring-2 ring-control-red shadow-[0_0_15px_rgba(239,68,68,0.7)] animate-pulse"
+                              : ""
                           }`}
                         >
-                          {activePickerSlot === idx ? (
-                            <div className="absolute inset-0 bg-control-bg/95 z-20 flex flex-col p-3 text-left overflow-y-auto rounded-xl">
-                              <div className="flex items-center justify-between border-b border-control-border pb-1.5 mb-2 shrink-0">
-                                <span className="text-[10px] text-control-text-bright font-bold uppercase tracking-wider">
-                                  Select Cam For Slot {idx + 1}
-                                </span>
-                                <button 
-                                  onClick={(e) => { e.stopPropagation(); setActivePickerSlot(null); }}
-                                  className="text-[9px] text-control-red hover:underline uppercase"
-                                >
-                                  Close
-                                </button>
-                              </div>
-                              
-                              <div className="flex-1 space-y-1">
-                                {cameras.map((cam) => {
-                                  const isAssigned = slotAssignments.includes(cam.id);
-                                  return (
-                                    <button
-                                      key={cam.id}
-                                      disabled={isAssigned}
-                                      onClick={(e) => { e.stopPropagation(); handleAssignCamera(idx, cam.id); }}
-                                      className={`w-full text-left px-2 py-1.5 text-[10px] border flex items-center justify-between transition-all ${
-                                        isAssigned 
-                                          ? "border-transparent bg-control-panel-light/30 text-control-text/40 cursor-not-allowed" 
-                                          : "border-control-border bg-control-panel hover:bg-control-cyan/5 hover:border-control-cyan/35 text-control-text hover:text-control-text-bright cursor-pointer"
-                                      }`}
-                                    >
-                                      <div className="flex items-center gap-1.5 truncate">
-                                        <span className={`h-1.5 w-1.5 rounded-full ${cam.statut === "active" ? "bg-control-green" : "bg-control-red"}`} />
-                                        <span className="truncate">{cam.nom}</span>
-                                      </div>
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          ) : (
+                          {assignedCamId && camera ? (
                             <>
-                              <button 
-                                onClick={(e) => { e.stopPropagation(); setActivePickerSlot(idx); }}
-                                className="p-3 border border-control-border bg-control-panel-light text-control-cyan/40 hover:text-control-cyan hover:border-control-cyan/50 hover:shadow-md transition-all cursor-pointer rounded-xl mb-2"
-                              >
-                                <Plus className="h-5 w-5" />
-                              </button>
-                              <div className="text-[10px] text-control-text-bright font-bold uppercase tracking-widest">
-                                SLOT {idx + 1} EMPTY
-                              </div>
-                              <p className="text-[8px] text-control-text/60 mt-1 max-w-[160px] leading-relaxed uppercase">
-                                Drag a camera here, or click "+" to assign.
-                              </p>
+                              <CameraPlayer
+                                cameraId={assignedCamId}
+                                cameraNom={camera.nom}
+                                statut={camera.statut}
+                                isZoomed={false}
+                                isSelected={isSelected}
+                                aspectRatioMode={aspectRatios[idx]}
+                                onClear={() => handleClearSlot(idx)}
+                                onClick={() => setSelectedSlotIndex(idx)}
+                                onDoubleClick={() => setZoomedSlotIndex(idx)}
+                                ptzSupported={camera.ptz_supported}
+                                onTogglePTZ={() =>
+                                  setPtzOpenSlots((prev) => ({ ...prev, [idx]: !prev[idx] }))
+                                }
+                                isPTZOpen={!!ptzOpenSlots[idx]}
+                                seekOffsetSeconds={
+                                  tilePlayback.isPlayback ? tilePlayback.seekOffsetSeconds : null
+                                }
+                                isPausedPlayback={tilePlayback.isPaused}
+                              />
+                              {/* Per-tile playback bar — shown on hover or while in playback mode */}
+                              <TilePlaybackBar
+                                isPlayback={tilePlayback.isPlayback}
+                                seekOffsetSeconds={tilePlayback.seekOffsetSeconds}
+                                isLoading={tilePlayback.isLoading}
+                                isPaused={tilePlayback.isPaused}
+                                onSeek={(offset) => handleTileSeek(idx, offset)}
+                                onTogglePlayPause={() => handleToggleTilePlayPause(idx)}
+                                onBackToLive={() => handleTileBackToLive(idx)}
+                              />
                             </>
-                          )}
+                          ) : layout !== "auto" ? (
+                            /* Empty slot drop zone — hidden in Auto mode */
+                            <div
+                              onClick={() => setSelectedSlotIndex(idx)}
+                              className={`relative w-full h-full bg-control-panel/40 border transition-all flex flex-col items-center justify-center p-4 text-center select-none rounded-lg ${
+                                isSelected
+                                  ? "border-control-cyan shadow-[0_0_15px_rgba(0,240,255,0.4)] z-10"
+                                  : "border-dashed border-control-border hover:border-control-cyan/40"
+                              }`}
+                            >
+                              {activePickerSlot === idx ? (
+                                <div className="absolute inset-0 bg-control-bg/95 z-20 flex flex-col p-3 text-left overflow-y-auto rounded-lg">
+                                  <div className="flex items-center justify-between border-b border-control-border pb-2 mb-2 shrink-0">
+                                    <span className="text-xs text-control-text-bright font-semibold">
+                                      Caméra — Emplacement {idx + 1}
+                                    </span>
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); setActivePickerSlot(null); }}
+                                      className="text-xs text-control-red hover:underline"
+                                    >
+                                      Fermer
+                                    </button>
+                                  </div>
+                                  <div className="flex-1 space-y-1 overflow-y-auto">
+                                    {cameras.map((cam) => {
+                                      const isAssigned = slotAssignments.includes(cam.id);
+                                      return (
+                                        <button
+                                          key={cam.id}
+                                          disabled={isAssigned}
+                                          onClick={(e) => { e.stopPropagation(); handleAssignCamera(idx, cam.id); }}
+                                          className={`w-full text-left px-3 py-2 text-xs border flex items-center justify-between transition-all rounded ${
+                                            isAssigned
+                                              ? "border-transparent bg-control-panel-light/30 text-control-text/40 cursor-not-allowed"
+                                              : "border-control-border bg-control-panel hover:bg-control-cyan/5 hover:border-control-cyan/35 text-control-text hover:text-control-text-bright cursor-pointer"
+                                          }`}
+                                        >
+                                          <div className="flex items-center gap-2 truncate">
+                                            <span
+                                              className={`h-2 w-2 rounded-full shrink-0 ${
+                                                cam.statut === "active" ? "bg-control-green" : "bg-control-red"
+                                              }`}
+                                            />
+                                            <span className="truncate">{cam.nom}</span>
+                                          </div>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              ) : (
+                                <>
+                                  <button 
+                                    onClick={(e) => { e.stopPropagation(); setActivePickerSlot(idx); }}
+                                    className="p-3 border border-control-border bg-control-panel-light text-control-cyan/40 hover:text-control-cyan hover:border-control-cyan/50 hover:shadow-md transition-all cursor-pointer rounded-xl mb-2"
+                                  >
+                                    <Plus className="h-5 w-5" />
+                                  </button>
+                                  <div className="text-xs text-control-text-bright font-semibold">
+                                    Emplacement {idx + 1}
+                                  </div>
+                                  <p className="text-xs text-control-text/60 mt-1 max-w-[160px] leading-relaxed">
+                                    Glissez une caméra ici ou cliquez sur « + ».
+                                  </p>
+                                </>
+                              )}
+                            </div>
+                          ) : null}
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()
             )}
           </div>
 
